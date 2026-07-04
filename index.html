@@ -1,263 +1,175 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>GIT!!! HEART</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Calculator</title>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     }
 
     body {
-      margin: 0;
-      min-height: 100vh;
-      background: #000;
-      overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #000;
       color: #fff;
-    }
-
-    .screen {
-      position: fixed;
-      inset: 0;
       display: flex;
-      align-items: center;
       justify-content: center;
-      text-align: center;
+      align-items: flex-end;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 400px;
       padding: 20px;
-      transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 10;
+      padding-bottom: 40px;
     }
 
-    .hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(1.15) translateY(-20px);
-      filter: blur(10px);
-    }
-
-    .box {
-      width: min(90vw, 480px);
-      padding: 40px 30px;
-      border: 1px solid rgba(255, 120, 160, 0.2);
-      border-radius: 30px;
-      /* Glassmorphism Effect */
-      background: linear-gradient(135deg, rgba(30, 0, 15, 0.6), rgba(10, 0, 5, 0.8));
-      box-shadow: 0 15px 40px rgba(255, 0, 80, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-    }
-
-    h1 {
-      margin: 0 0 15px;
-      font-size: clamp(36px, 10vw, 64px);
-      background: linear-gradient(to right, #ff4d88, #ff99cc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
-      letter-spacing: 2px;
-    }
-
-    p {
-      color: #ffd6e5;
-      line-height: 1.7;
-      font-size: 18px;
+    .display {
+      font-size: 85px;
       font-weight: 300;
-      margin-bottom: 30px;
+      text-align: right;
+      padding: 20px 10px;
+      word-break: break-all;
+      transition: font-size 0.3s ease;
+      min-height: 120px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+
+    /* คลาสสำหรับลดขนาดฟอนต์ตอนแสดงข้อความ */
+    .display.message-mode {
+      font-size: 45px;
+      font-weight: 500;
+      color: #ff2d55;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
     }
 
     button {
+      width: 100%;
+      aspect-ratio: 1 / 1;
       border: none;
-      padding: 16px 36px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #ff0055, #ff4da6);
-      color: white;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 1px;
+      border-radius: 50%;
+      font-size: 32px;
       cursor: pointer;
-      box-shadow: 0 8px 25px rgba(255, 0, 90, 0.4);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    button:hover {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 12px 35px rgba(255, 0, 90, 0.6);
-      background: linear-gradient(135deg, #ff1a66, #ff66b3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: filter 0.1s;
     }
 
     button:active {
-      transform: translateY(1px) scale(0.95);
+      filter: brightness(1.5);
     }
 
-    canvas {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 1;
+    .btn-dark {
+      background-color: #333333;
+      color: #fff;
     }
 
-    .small {
-      display: block;
-      margin-top: 20px;
-      font-size: 13px;
-      color: rgba(255, 182, 207, 0.6);
-      font-weight: 400;
+    .btn-light {
+      background-color: #a5a5a5;
+      color: #000;
+      font-size: 28px;
+    }
+
+    .btn-orange {
+      background-color: #ff9f0a;
+      color: #fff;
+      font-size: 36px;
+    }
+
+    .btn-zero {
+      grid-column: span 2;
+      aspect-ratio: auto;
+      border-radius: 50px;
+      justify-content: flex-start;
+      padding-left: 30px;
+    }
+
+    /* ปรับแต่งพิเศษสำหรับหน้าจอมือถือเล็กๆ */
+    @media (max-width: 360px) {
+      .display { font-size: 70px; }
+      button { font-size: 28px; }
+      .buttons { gap: 10px; }
     }
   </style>
 </head>
-
 <body>
-  <canvas id="heartCanvas"></canvas>
 
-  <div class="screen" id="startScreen">
-    <div class="box">
-      <h1>GIT!!!</h1>
-      <p>
-        ระบบกำลังเตรียมโหลดหัวใจ...<br>
-        พร้อมแล้วกดปุ่มเพื่อเริ่มได้เลย
-      </p>
-      <button onclick="startHeart()">เปิดหัวใจ</button>
-      <span class="small">HTML ไฟล์เดียว รันได้ลื่นไหล</span>
+  <div class="calculator">
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button class="btn-light" onclick="clearDisplay()">AC</button>
+      <button class="btn-light" onclick="appendInput('+/-')">+/-</button>
+      <button class="btn-light" onclick="appendInput('%')">%</button>
+      <button class="btn-orange" onclick="appendInput('÷')">÷</button>
+
+      <button class="btn-dark" onclick="appendInput('7')">7</button>
+      <button class="btn-dark" onclick="appendInput('8')">8</button>
+      <button class="btn-dark" onclick="appendInput('9')">9</button>
+      <button class="btn-orange" onclick="appendInput('×')">×</button>
+
+      <button class="btn-dark" onclick="appendInput('4')">4</button>
+      <button class="btn-dark" onclick="appendInput('5')">5</button>
+      <button class="btn-dark" onclick="appendInput('6')">6</button>
+      <button class="btn-orange" onclick="appendInput('-')">−</button>
+
+      <button class="btn-dark" onclick="appendInput('1')">1</button>
+      <button class="btn-dark" onclick="appendInput('2')">2</button>
+      <button class="btn-dark" onclick="appendInput('3')">3</button>
+      <button class="btn-orange" onclick="appendInput('+')">+</button>
+
+      <button class="btn-dark btn-zero" onclick="appendInput('0')">0</button>
+      <button class="btn-dark" onclick="appendInput('.')">.</button>
+      <button class="btn-orange" onclick="showLove()">=</button>
     </div>
   </div>
 
   <script>
-    const canvas = document.getElementById("heartCanvas");
-    const ctx = canvas.getContext("2d");
-    const startScreen = document.getElementById("startScreen");
+    const display = document.getElementById('display');
+    let isMessageShown = false;
 
-    let W, H;
-    let particles = [];
-    let started = false;
-    let time = 0;
+    function appendInput(val) {
+      // ถ้ารูปหัวใจโชว์อยู่ แล้วกดปุ่มอื่น ให้รีเซ็ตกลับเป็นตัวเลขก่อน
+      if (isMessageShown) {
+        clearDisplay();
+      }
 
-    function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
-
-    window.addEventListener("resize", resize);
-    resize();
-
-    // สูตรคำนวณรูปหัวใจ
-    function heartPoint(t, scale) {
-      const x = 16 * Math.pow(Math.sin(t), 3);
-      const y =
-        13 * Math.cos(t) -
-        5 * Math.cos(2 * t) -
-        2 * Math.cos(3 * t) -
-        Math.cos(4 * t);
-
-      return {
-        x: W / 2 + x * scale,
-        y: H / 2 - y * scale
-      };
-    }
-
-    function createParticles() {
-      particles = [];
-      
-      for (let i = 0; i < 900; i++) {
-        const t = Math.random() * Math.PI * 2;
-        const offsetX = (Math.random() - 0.5) * 28;
-        const offsetY = (Math.random() - 0.5) * 28;
-        const randomSize = Math.random() * 1.5 + 0.6;
-
-        particles.push({
-          x: Math.random() * W, // จุดเริ่มแบบสุ่ม
-          y: Math.random() * H,
-          baseT: t,             // เก็บมุมของรูปหัวใจ
-          offsetX: offsetX,     // ระยะเหลื่อมเพื่อให้หัวใจดูมีมิติ
-          offsetY: offsetY,
-          size: randomSize,
-          speed: Math.random() * 0.03 + 0.015,
-          angle: Math.random() * Math.PI * 2,
-          text: Math.random() > 0.8 ? "✨" : "❤", // ผสมหัวใจกับประกายแสง
-          // สุ่มสีเก็บไว้เลยเพื่อป้องกันสีสั่น (Flicker) ในลูปวาด
-          r: 255,
-          g: Math.floor(60 + Math.random() * 80),
-          b: Math.floor(120 + Math.random() * 80),
-          alpha: 0.6 + Math.random() * 0.4
-        });
+      if (display.innerText === '0' && val !== '.') {
+        display.innerText = val;
+      } else {
+        // จำกัดไม่ให้พิมพ์ยาวเกินไปจนล้นจอ
+        if (display.innerText.length < 9) {
+          display.innerText += val;
+        }
       }
     }
 
-    function startHeart() {
-      started = true;
-      startScreen.classList.add("hidden");
-      createParticles();
+    function clearDisplay() {
+      display.innerText = '0';
+      display.classList.remove('message-mode');
+      isMessageShown = false;
     }
 
-    function drawBackground() {
-      // พื้นหลังแบบเรเดียล ให้ตรงกลางสว่างกว่าขอบ
-      const gradient = ctx.createRadialGradient(
-        W / 2, H / 2, 0,
-        W / 2, H / 2, Math.max(W, H)
-      );
-
-      gradient.addColorStop(0, "#2a0012");
-      gradient.addColorStop(0.5, "#0d0006");
-      gradient.addColorStop(1, "#000000");
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, W, H);
+    function showLove() {
+      // เซอร์ไพรส์! เมื่อกดปุ่ม = 
+      display.innerText = 'I LOVE YOU 💖';
+      display.classList.add('message-mode');
+      isMessageShown = true;
     }
-
-    function drawParticles() {
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      
-      // ใช้โหมดเบลนสีให้ดูเรืองแสงสวยงาม
-      ctx.globalCompositeOperation = "lighter"; 
-
-      // สร้างจังหวะหัวใจเต้น (Heartbeat)
-      const baseScale = Math.min(W, H) / 38;
-      // กราฟจังหวะเต้น 2 จังหวะ
-      const beat = Math.sin(time * 3) * 0.08 + Math.sin(time * 6) * 0.04; 
-      const currentScale = baseScale * (1 + beat);
-
-      for (const p of particles) {
-        // อัปเดตเป้าหมายของแต่ละอนุภาคตามขนาดที่เต้น
-        const target = heartPoint(p.baseT, currentScale);
-        p.tx = target.x + p.offsetX;
-        p.ty = target.y + p.offsetY;
-
-        // เคลื่อนที่แบบ Smooth Follow
-        p.x += (p.tx - p.x) * p.speed;
-        p.y += (p.ty - p.y) * p.speed;
-
-        // การลอยวนเบาๆ
-        p.angle += 0.04;
-        const waveX = Math.sin(time * 2 + p.angle) * 2;
-        const waveY = Math.cos(time * 2 + p.angle) * 2;
-
-        ctx.font = `${10 + p.size * 6}px Arial`;
-        ctx.fillStyle = `rgba(${p.r}, ${p.g}, ${p.b}, ${p.alpha})`;
-        
-        ctx.fillText(p.text, p.x + waveX, p.y + waveY);
-      }
-      
-      ctx.globalCompositeOperation = "source-over"; // คืนค่าโหมดปกติ
-    }
-
-    function animate() {
-      time += 0.02;
-      drawBackground();
-
-      if (started) {
-        drawParticles();
-      }
-
-      requestAnimationFrame(animate);
-    }
-
-    // เริ่มลูปแอนิเมชันทันที (จะโชว์แค่พื้นหลังจนกว่าจะกดปุ่ม)
-    animate();
   </script>
+
 </body>
 </html>

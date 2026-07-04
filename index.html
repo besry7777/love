@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Calculator</title>
   <style>
     * {
@@ -11,6 +11,11 @@
       padding: 0;
       -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      
+      /* ป้องกันการคลุมดำข้อความ และการซูมด้วยการแตะหน้าจอ */
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none; 
     }
 
     body {
@@ -18,32 +23,36 @@
       color: #fff;
       display: flex;
       justify-content: center;
-      align-items: flex-end;
-      height: 100vh;
+      /* ใช้ dvh เพื่อให้พอดีจอจริงๆ แม้จะมีแถบเครื่องมือของเบราว์เซอร์โผล่มา */
+      height: 100dvh; 
+      width: 100vw;
       overflow: hidden;
     }
 
     .calculator {
       width: 100%;
-      max-width: 400px;
+      /* คำนวณความกว้างให้สัมพันธ์กับความสูง เพื่อไม่ให้ปุ่มล้นจอในเครื่องที่จอเตี้ย */
+      max-width: min(400px, 75dvh); 
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
       padding: 20px;
-      padding-bottom: 40px;
+      /* เผื่อพื้นที่ด้านล่างสำหรับ iPhone รุ่นที่มีขีด Home Indicator */
+      padding-bottom: max(30px, env(safe-area-inset-bottom));
     }
 
     .display {
       font-size: 85px;
       font-weight: 300;
       text-align: right;
-      padding: 20px 10px;
+      padding: 0 10px 20px 10px;
       word-break: break-all;
       transition: font-size 0.3s ease;
-      min-height: 120px;
       display: flex;
       align-items: flex-end;
       justify-content: flex-end;
     }
 
-    /* คลาสสำหรับลดขนาดฟอนต์ตอนแสดงข้อความ */
     .display.message-mode {
       font-size: 45px;
       font-weight: 500;
@@ -53,7 +62,7 @@
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
+      gap: 12px;
     }
 
     button {
@@ -82,6 +91,7 @@
       background-color: #a5a5a5;
       color: #000;
       font-size: 28px;
+      font-weight: 400;
     }
 
     .btn-orange {
@@ -93,16 +103,18 @@
     .btn-zero {
       grid-column: span 2;
       aspect-ratio: auto;
-      border-radius: 50px;
+      border-radius: 999px; /* ทำให้ขอบมนเป็นแคปซูล */
       justify-content: flex-start;
       padding-left: 30px;
     }
 
-    /* ปรับแต่งพิเศษสำหรับหน้าจอมือถือเล็กๆ */
+    /* ปรับฟอนต์อัตโนมัติเมื่อจอเล็กหรือแคบมากๆ */
     @media (max-width: 360px) {
       .display { font-size: 70px; }
+      .display.message-mode { font-size: 35px; }
       button { font-size: 28px; }
       .buttons { gap: 10px; }
+      .btn-zero { padding-left: 25px; }
     }
   </style>
 </head>
@@ -150,7 +162,7 @@
       if (display.innerText === '0' && val !== '.') {
         display.innerText = val;
       } else {
-        // จำกัดไม่ให้พิมพ์ยาวเกินไปจนล้นจอ
+        // จำกัดความยาวเพื่อไม่ให้ตัวเลขทะลุขอบจอ
         if (display.innerText.length < 9) {
           display.innerText += val;
         }
@@ -164,7 +176,7 @@
     }
 
     function showLove() {
-      // เซอร์ไพรส์! เมื่อกดปุ่ม = 
+      // เซอร์ไพรส์! เมื่อกดปุ่ม =
       display.innerText = 'I LOVE YOU 💖';
       display.classList.add('message-mode');
       isMessageShown = true;

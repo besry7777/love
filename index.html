@@ -11,8 +11,6 @@
       padding: 0;
       -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-      
-      /* ป้องกันการคลุมดำข้อความ และการซูมด้วยการแตะหน้าจอ */
       user-select: none;
       -webkit-user-select: none;
       touch-action: none; 
@@ -23,7 +21,6 @@
       color: #fff;
       display: flex;
       justify-content: center;
-      /* ใช้ dvh เพื่อให้พอดีจอจริงๆ แม้จะมีแถบเครื่องมือของเบราว์เซอร์โผล่มา */
       height: 100dvh; 
       width: 100vw;
       overflow: hidden;
@@ -31,32 +28,52 @@
 
     .calculator {
       width: 100%;
-      /* คำนวณความกว้างให้สัมพันธ์กับความสูง เพื่อไม่ให้ปุ่มล้นจอในเครื่องที่จอเตี้ย */
       max-width: min(400px, 75dvh); 
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       padding: 20px;
-      /* เผื่อพื้นที่ด้านล่างสำหรับ iPhone รุ่นที่มีขีด Home Indicator */
       padding-bottom: max(30px, env(safe-area-inset-bottom));
+    }
+
+    /* ซ่อนส่วนที่ล้นออกไปเพื่อให้ตอนสไลด์ดูเนียน ไม่ทะลุจอ */
+    .display-container {
+      width: 100%;
+      overflow: hidden; 
+      margin-bottom: 20px;
     }
 
     .display {
       font-size: 85px;
       font-weight: 300;
       text-align: right;
-      padding: 0 10px 20px 10px;
+      padding: 0 10px;
       word-break: break-all;
-      transition: font-size 0.3s ease;
       display: flex;
       align-items: flex-end;
       justify-content: flex-end;
     }
 
+    /* ตกแต่งข้อความ I LOVE YOU ให้สวยขึ้น */
     .display.message-mode {
-      font-size: 45px;
-      font-weight: 500;
-      color: #ff2d55;
+      font-size: 42px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ff2a5f, #ff758c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      /* อนิเมชั่นเลื่อนจากขวามาซ้าย */
+      animation: slideInText 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideInText {
+      0% {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
     }
 
     .buttons {
@@ -103,15 +120,14 @@
     .btn-zero {
       grid-column: span 2;
       aspect-ratio: auto;
-      border-radius: 999px; /* ทำให้ขอบมนเป็นแคปซูล */
+      border-radius: 999px; 
       justify-content: flex-start;
       padding-left: 30px;
     }
 
-    /* ปรับฟอนต์อัตโนมัติเมื่อจอเล็กหรือแคบมากๆ */
     @media (max-width: 360px) {
       .display { font-size: 70px; }
-      .display.message-mode { font-size: 35px; }
+      .display.message-mode { font-size: 34px; }
       button { font-size: 28px; }
       .buttons { gap: 10px; }
       .btn-zero { padding-left: 25px; }
@@ -121,7 +137,10 @@
 <body>
 
   <div class="calculator">
-    <div class="display" id="display">0</div>
+    <div class="display-container">
+      <div class="display" id="display">0</div>
+    </div>
+    
     <div class="buttons">
       <button class="btn-light" onclick="clearDisplay()">AC</button>
       <button class="btn-light" onclick="appendInput('+/-')">+/-</button>
@@ -152,9 +171,12 @@
   <script>
     const display = document.getElementById('display');
     let isMessageShown = false;
+    let isAnimating = false; // ตัวแปรสำหรับล็อคปุ่มตอนอนิเมชั่นเล่น
 
     function appendInput(val) {
-      // ถ้ารูปหัวใจโชว์อยู่ แล้วกดปุ่มอื่น ให้รีเซ็ตกลับเป็นตัวเลขก่อน
+      // ถ้ากำลังเล่นอนิเมชั่นอยู่ จะกดปุ่มอะไรไม่ได้เลย
+      if (isAnimating) return; 
+
       if (isMessageShown) {
         clearDisplay();
       }
@@ -162,7 +184,6 @@
       if (display.innerText === '0' && val !== '.') {
         display.innerText = val;
       } else {
-        // จำกัดความยาวเพื่อไม่ให้ตัวเลขทะลุขอบจอ
         if (display.innerText.length < 9) {
           display.innerText += val;
         }
@@ -170,16 +191,33 @@
     }
 
     function clearDisplay() {
+      if (isAnimating) return; // กันบัคกด AC ตอนกำลังเล่นอนิเมชั่น
+      
       display.innerText = '0';
       display.classList.remove('message-mode');
       isMessageShown = false;
     }
 
     function showLove() {
-      // เซอร์ไพรส์! เมื่อกดปุ่ม =
+      // ถ้าโชว์ข้อความไปแล้ว หรือกำลังเล่นอนิเมชั่นอยู่ ให้หยุดการทำงาน (ป้องกันการกด = รัวๆ)
+      if (isMessageShown || isAnimating) return;
+
+      isAnimating = true;
+      isMessageShown = true;
+
+      // รีเซ็ตคลาสก่อนเพื่อชัวร์ว่าอนิเมชั่นจะทำงาน
+      display.classList.remove('message-mode');
+      
+      // บังคับให้เบราว์เซอร์อัปเดต DOM (เคลียร์เฟรม) เพื่อให้อนิเมชั่นทำงานใหม่ได้สมบูรณ์
+      void display.offsetWidth; 
+      
       display.innerText = 'I LOVE YOU 💖';
       display.classList.add('message-mode');
-      isMessageShown = true;
+
+      // ปลดล็อคปุ่มหลังจากผ่านไป 1.5 วินาที (เท่ากับความยาวอนิเมชั่นใน CSS)
+      setTimeout(() => {
+        isAnimating = false;
+      }, 1500);
     }
   </script>
 

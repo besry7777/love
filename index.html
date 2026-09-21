@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>C++ 3D Sandbox (Multi-Includes)</title>
+    <title>C++ 3D Sandbox (Smart Compiler)</title>
     <style>
         :root {
             --bg-color: #0f111a;
@@ -11,8 +11,6 @@
             --accent: #00e5ff;
             --error: #ff3366;
             --text-main: #e0e6ed;
-            --comment: #637777;
-            --keyword: #ff7b72;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
@@ -86,7 +84,7 @@
         .sys-text { color: #a6accd; }
 
         #console-area {
-            height: 50px; /* ขยายคอนโซลนิดนึงให้เห็นตอนโหลด Lib */
+            height: 60px;
             background: #0a0c13;
             color: #00e5ff;
             font-size: 12px;
@@ -112,29 +110,34 @@
 
     <div id="bottom-editor">
         <textarea id="code-area" spellcheck="false">#include <iostream>
-#include <string>
-#include <vector>
 #include <Engine3D.h>
-#include <Math3D.h>
 
 using namespace std;
 
 int main() {
-    // กำหนดพิกัดเริ่มต้น
-    float spawnX = 5.0;
-    float spawnY = 2.0;
-    float spawnZ = -2.0;
+    float y = 6.0;
 
-    // สร้างกล่องตามพิกัด
-    CreateCube("PlayerBox", spawnX, spawnY, spawnZ);
+    // ถ้า y สูงกว่า 5 กล่องจะเป็นสีแดง (0xff3366)
+    // ถ้าต่ำกว่า 5 กล่องจะเป็นสีฟ้า (0x00e5ff)
+    int boxColor;
+
+    if (y > 5.0) {
+        boxColor = 0xff3366; 
+        cout << "Warning: Box is very high!";
+    } else {
+        boxColor = 0x00e5ff;
+        cout << "Box is at safe height.";
+    }
+
+    CreateCube("LogicBox", 0.0, y, 0.0, boxColor);
 
     return 0;
 }</textarea>
-        <div id="console-area"><div class="sys-text">> System Ready. Waiting for build...</div></div>
+        <div id="console-area"><div class="sys-text">> System Ready. Smart Compiler Active.</div></div>
     </div>
 
     <script>
-        // --- 1. ส่วนของ 3D Engine (เหมือนเดิม) ---
+        // --- 1. ส่วนของ 3D Engine ---
         let scene, camera, renderer;
         let objects = [];
 
@@ -183,19 +186,16 @@ int main() {
 
         init3D();
 
-        // --- 2. ระบบ Console แบบเพิ่มบรรทัดได้ ---
+        // --- 2. ระบบ Console ---
         const consoleArea = document.getElementById('console-area');
 
-        function clearConsole() {
-            consoleArea.innerHTML = '';
-        }
+        function clearConsole() { consoleArea.innerHTML = ''; }
 
         function logConsole(msg, type="sys-text") {
             const div = document.createElement('div');
             div.className = type;
             div.innerHTML = msg;
             consoleArea.appendChild(div);
-            // เลื่อน scroll ลงล่างสุดอัตโนมัติ
             consoleArea.scrollTop = consoleArea.scrollHeight; 
         }
 
@@ -203,97 +203,56 @@ int main() {
             objects.forEach(obj => scene.remove(obj));
             objects = [];
             clearConsole();
-            logConsole("> Scene reset.", "success-text");
+            logConsole("> Scene reset.", "sys-text");
         }
 
-        // --- 3. ระบบจำลองการ Compile & Run ---
-        async function runSimulation() {
+        // API สำหรับให้ C++ เรียกใช้
+        function api_CreateCube(name, x, y, z, colorHex = 0x00e5ff) {
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            const material = new THREE.MeshStandardMaterial({ color: colorHex });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set(x, y, z);
+            scene.add(cube);
+            objects.push(cube);
+            logConsole(`> [3D] Created '${name}' at (${x}, ${y}, ${z})`, "success-text");
+        }
+
+        // --- 3. Smart Compiler (C++ to JS Transpiler) ---
+        function runSimulation() {
             resetScene();
             const code = document.getElementById('code-area').value;
             
-            logConsole("> Starting Build Task...", "sys-text");
-
-            // ดึง #include ทั้งหมดจากโค้ด
-            const includeRegex = /#include\s+<([^>]+)>/g;
-            let matchInclude;
-            const includedLibs = [];
-            
-            while ((matchInclude = includeRegex.exec(code)) !== null) {
-                includedLibs.push(matchInclude[1]);
+            if (!code.includes('#include <Engine3D.h>')) {
+                return logConsole("> Error: Missing &lt;Engine3D.h&gt;", "error-text");
             }
 
-            // จำลองเวลาโหลด Library แต่ละตัวให้ดูเท่ๆ
-            for(let lib of includedLibs) {
-                logConsole(`> Linking &lt;${lib}&gt;... OK`);
-                // หน่วงเวลาเล็กน้อยให้เหมือนกำลัง Compile
-                await new Promise(r => setTimeout(r, 100)); 
-            }
-
-            // ตรวจสอบ Library ที่จำเป็น
-            if (!includedLibs.includes('Engine3D.h')) {
-                logConsole("> Fatal Error: Cannot resolve 3D functions. Missing &lt;Engine3D.h&gt;", "error-text");
-                return;
-            }
-
-            // ตรวจสอบ using namespace std;
-            if (!code.includes('using namespace std;')) {
-                logConsole("> Warning: 'std' namespace not declared. Proceeding anyway...", "sys-text");
-            }
-
-            // ตรวจสอบ Entry Point
             const mainRegex = /int\s+main\s*\(\s*\)\s*\{([\s\S]*)\}/;
             const mainMatch = code.match(mainRegex);
             
             if (!mainMatch) {
-                logConsole("> Error: Entry point 'int main()' not found.", "error-text");
-                return;
+                return logConsole("> Error: Entry point 'int main()' not found.", "error-text");
             }
 
-            const mainBody = mainMatch[1];
-            
-            // เริ่มจำลองการประมวลผลโค้ดใน main()
+            let mainBody = mainMatch[1];
+
+            // ลบ return 0; ออก
+            mainBody = mainBody.replace(/return\s+0\s*;/g, '');
+
+            // แปลงไวยากรณ์ C++ พื้นฐานให้เป็น JS เพื่อจำลองการรัน
+            let jsCode = mainBody
+                // แปลง float, int เป็น let
+                .replace(/(?:float|int|double|string|bool)\s+([a-zA-Z_]\w*)/g, 'let $1')
+                // แปลง cout << "..."
+                .replace(/cout\s*<<\s*"([^"]*)"\s*(?:<<\s*endl\s*)?;/g, 'logConsole("> [C++] $1", "success-text");')
+                // เชื่อม CreateCube เข้ากับ API
+                .replace(/CreateCube/g, 'api_CreateCube');
+
             try {
-                let xValue = 0, yValue = 0, zValue = 0;
-                
-                const varRegex = /float\s+([a-zA-Z_]\w*)\s*=\s*([-0-9.]+);/g;
-                let match;
-                const variables = {}; 
-
-                while ((match = varRegex.exec(mainBody)) !== null) {
-                    variables[match[1]] = parseFloat(match[2]);
-                }
-
-                const cubeRegex = /CreateCube\s*\(\s*"([^"]+)"\s*,\s*([a-zA-Z_]\w*\vert{}[-0-9.]+)\s*,\s*([a-zA-Z_]\w*\vert{}[-0-9.]+)\s*,\s*([a-zA-Z_]\w*\vert{}[-0-9.]+)\s*\);/;
-                const cubeMatch = mainBody.match(cubeRegex);
-
-                if (cubeMatch) {
-                    const cubeName = cubeMatch[1];
-                    const getVal = (valStr) => variables[valStr] !== undefined ? variables[valStr] : parseFloat(valStr);
-                    
-                    xValue = getVal(cubeMatch[2]);
-                    yValue = getVal(cubeMatch[3]);
-                    zValue = getVal(cubeMatch[4]);
-
-                    if (isNaN(xValue) || isNaN(yValue) || isNaN(zValue)) {
-                        logConsole(`> Runtime Error: Undefined variable used in CreateCube.`, "error-text");
-                        return;
-                    }
-
-                    // สร้าง 3D Object
-                    const geometry = new THREE.BoxGeometry(2, 2, 2);
-                    const material = new THREE.MeshStandardMaterial({ color: 0x00e5ff });
-                    const cube = new THREE.Mesh(geometry, material);
-                    cube.position.set(xValue, yValue, zValue);
-                    scene.add(cube);
-                    objects.push(cube);
-                    
-                    logConsole(`> Executed: Created '${cubeName}' at (${xValue}, ${yValue}, ${zValue})`, "success-text");
-                } else {
-                    logConsole("> Build finished. 0 errors, 0 warnings. (No 3D objects created)", "success-text");
-                }
-
+                // สร้างฟังก์ชันจำลองและรันโค้ด
+                const sandbox = new Function('api_CreateCube', 'logConsole', jsCode);
+                sandbox(api_CreateCube, logConsole);
             } catch (error) {
-                logConsole("> Syntax error inside main(). Missing semicolon?", "error-text");
+                logConsole(`> Runtime Error: ${error.message} (Check your variables or syntax)`, "error-text");
             }
         }
     </script>

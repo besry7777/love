@@ -3,135 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IG Unfollow Radar - ระบบตรวจสอบคนไม่ฟอลกลับ</title>
+  <title>IG Unfollow Radar (Real Edition)</title>
+  <!-- โหลด JSZip สำหรับแกะไฟล์ ZIP จาก Instagram โดยตรงในเบราว์เซอร์ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     :root {
-      --bg: #0f0f13;
-      --card: #1a1a22;
-      --border: #2e2e3a;
+      --bg: #0b0b0f;
+      --card: #16161e;
+      --border: #2a2a38;
       --accent: #e1306c;
-      --accent-grad: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-      --text: #f1f1f5;
-      --muted: #9090a0;
+      --grad: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      --text: #f3f3f7;
+      --muted: #8e8ea0;
       --success: #2ecc71;
+      --danger: #ff4d6d;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 16px; max-width: 760px; margin: 0 auto; }
-    
-    header { text-align: center; padding: 20px 0; }
-    header h1 { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.8rem; margin-bottom: 6px; }
-    header p { color: var(--muted); font-size: 0.9rem; }
+    body { background: var(--bg); color: var(--text); padding: 14px; max-width: 780px; margin: 0 auto; }
 
-    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .tab-btn { flex: 1; padding: 12px; background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-    .tab-btn.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
+    header { text-align: center; padding: 16px 0; }
+    header h1 { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.7rem; }
+    header p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
 
-    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; display: none; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab-btn { flex: 1; padding: 11px; background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.88rem; }
+    .tab-btn.active { background: var(--grad); color: #fff; border-color: transparent; }
+
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; display: none; }
     .panel.active { display: block; }
 
-    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
-    input[type="text"], textarea, input[type="file"] {
-      width: 100%; background: #121218; border: 1px solid var(--border); color: var(--text);
-      padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 0.95rem;
+    .drop-zone {
+      border: 2px dashed #44445a; border-radius: 12px; padding: 28px 16px;
+      text-align: center; cursor: pointer; transition: 0.2s; background: #111118; margin-bottom: 12px;
     }
-    textarea { height: 110px; resize: vertical; font-family: monospace; }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 540px) { .grid-2 { grid-template-columns: 1fr; } }
+    .drop-zone:hover { border-color: var(--accent); background: #18131c; }
+    .drop-zone h3 { font-size: 1.05rem; margin-bottom: 6px; }
+    .drop-zone p { font-size: 0.82rem; color: var(--muted); }
 
     .btn {
-      width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 1rem;
-      font-weight: 700; cursor: pointer; color: #fff; background: var(--accent-grad); transition: opacity 0.2s;
+      width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem;
+      font-weight: 700; cursor: pointer; color: #fff; background: var(--grad);
     }
-    .btn:hover { opacity: 0.9; }
-    .btn-secondary { background: #2c2c3a; margin-top: 8px; font-size: 0.9rem; }
+    .btn-outline { background: #232330; border: 1px solid var(--border); margin-top: 8px; font-size: 0.85rem; }
 
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-    .stat-box { background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: 12px; text-align: center; }
-    .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--text); }
-    .stat-num.danger { color: #ff4d6d; }
-    .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .stat-box { background: var(--card); border: 1px solid var(--border); padding: 12px 8px; border-radius: 12px; text-align: center; }
+    .stat-num { font-size: 1.4rem; font-weight: 800; }
+    .stat-num.danger { color: var(--danger); }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 
-    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap; }
-    .user-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .chip { padding: 7px 12px; border-radius: 20px; background: #1e1e2a; border: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+    .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    input[type="text"], textarea {
+      width: 100%; background: #101016; border: 1px solid var(--border); color: var(--text);
+      padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 10px;
+    }
+
+    .user-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow-y: auto; }
     .user-item {
       display: flex; justify-content: space-between; align-items: center;
-      background: #14141c; border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px;
+      background: #111117; border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px; gap: 8px;
     }
     .user-item.checked { opacity: 0.45; border-color: var(--success); }
-    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .avatar {
-      width: 36px; height: 36px; border-radius: 50%; background: var(--accent-grad);
-      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;
+      width: 34px; height: 34px; border-radius: 50%; background: var(--grad); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;
     }
-    .username { font-weight: 600; font-size: 0.95rem; }
-    .actions { display: flex; gap: 8px; align-items: center; }
+    .username { font-weight: 600; font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .actions { display: flex; gap: 6px; flex-shrink: 0; }
     .inspect-link {
-      text-decoration: none; background: #262635; color: #fff; padding: 7px 12px;
-      border-radius: 8px; font-size: 0.82rem; font-weight: 600; border: 1px solid #3a3a4e;
+      text-decoration: none; background: #262636; color: #fff; padding: 7px 10px;
+      border-radius: 8px; font-size: 0.78rem; font-weight: 600; border: 1px solid #3a3a4e;
     }
-    .inspect-link:hover { background: var(--accent); border-color: var(--accent); }
+    .inspect-link:hover { background: var(--accent); }
     .check-btn {
       background: transparent; border: 1px solid var(--border); color: var(--muted);
-      padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+      padding: 7px 9px; border-radius: 8px; cursor: pointer; font-size: 0.78rem;
     }
     .user-item.checked .check-btn { background: var(--success); color: #000; border-color: var(--success); font-weight: 700; }
-    .status-log { font-family: monospace; font-size: 0.82rem; color: #58d68d; background: #09090c; padding: 10px; border-radius: 8px; margin-bottom: 12px; display: none; }
+    .code-box { background: #08080c; border: 1px solid var(--border); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.78rem; color: #58d68d; overflow-x: auto; white-space: pre; margin-bottom: 10px; }
+    .msg { font-size: 0.85rem; text-align: center; padding: 8px; border-radius: 8px; margin-bottom: 10px; display: none; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>IG Unfollow Radar</h1>
-    <p>ระบบเปรียบเทียบเซตข้อมูล Following vs Followers พร้อมลิงก์ตรวจสอบโปรไฟล์</p>
+    <p>เช็กคนไม่ฟอลกลับของจริง 100% • ประมวลผลในเครื่องคุณเอง • ไม่ต้องใช้รหัสผ่าน</p>
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('sim')">1. โหมดจำลอง / วางรายชื่อเอง</button>
-    <button class="tab-btn" onclick="switchTab('json')">2. โหมดอัปโหลดไฟล์ JSON (แม่นยำ 100%)</button>
+    <button class="tab-btn active" onclick="switchTab('zip')">1. อัปโหลดไฟล์ ZIP / JSON จากไอจี</button>
+    <button class="tab-btn" onclick="switchTab('live')">2. ดึงรายชื่อสดผ่านเบราว์เซอร์</button>
   </div>
 
-  <!-- โหมดที่ 1: จำลองการทำงาน / วางรายชื่อ -->
-  <div id="tab-sim" class="panel active">
-    <label>ชื่อบัญชีเจ้าของ (Target Account)</label>
-    <input type="text" id="ownerName" placeholder="เช่น my_ig_account" value="my_ig_account">
+  <div id="statusMsg" class="msg"></div>
 
-    <div id="botLog" class="status-log"></div>
-
-    <div class="grid-2">
-      <div>
-        <label>กำลังติดตาม (Following) - บรรทัดละ 1 ชื่อ</label>
-        <textarea id="followingInput" placeholder="user_a&#10;user_b&#10;user_c"></textarea>
-      </div>
-      <div>
-        <label>ผู้ติดตาม (Followers) - บรรทัดละ 1 ชื่อ</label>
-        <textarea id="followersInput" placeholder="user_a&#10;user_c"></textarea>
-      </div>
+  <!-- โหมด 1: โยนไฟล์ ZIP หรือ JSON/HTML -->
+  <div id="tab-zip" class="panel active">
+    <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+      <h3>📁 แตะเพื่อเลือกไฟล์ .ZIP จาก Instagram</h3>
+      <p>เลือกไฟล์ .zip ที่โหลดมาจากไอจีได้โดยตรง (ไม่ต้องแตกไฟล์) หรือเลือกไฟล์ following และ followers หลายไฟล์พร้อมกันก็ได้</p>
+      <input type="file" id="fileInput" multiple accept=".zip,.json,.html" style="display:none" onchange="handleFiles(this.files)">
     </div>
-
-    <button class="btn" onclick="analyzeManual()">สแกนหาคนไม่ฟอลกลับ</button>
-    <button class="btn btn-secondary" onclick="loadDemoData()">ทดลองโหลดข้อมูลจำลอง (Demo)</button>
+    <button class="btn btn-outline" onclick="clearSavedData()">ล้างข้อมูลที่บันทึกไว้ในเครื่อง</button>
   </div>
 
-  <!-- โหมดที่ 2: อัปโหลดไฟล์ JSON จาก Instagram -->
-  <div id="tab-json" class="panel">
-    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 14px;">
-      วิธีนี้ปลอดภัย 100% ไม่ต้องใช้บอทล็อกอิน: ขอไฟล์ข้อมูลจากเมนู <b>Accounts Center &gt; Download your information</b> เลือกเฉพาะ <b>Followers and following</b> ในรูปแบบ <b>JSON</b> แล้วนำไฟล์มาใส่ที่นี่
+  <!-- โหมด 2: สคริปต์ดึงข้อมูลสดจากหน้าเว็บ Instagram -->
+  <div id="tab-live" class="panel">
+    <p style="font-size: 0.83rem; color: var(--muted); margin-bottom: 8px;">
+      <b>สำหรับคนขี้เกียจรอโหลดไฟล์:</b> เปิดเว็บ <b>instagram.com</b> ในคอม (ล็อกอินให้เรียบร้อย) กดปุ่ม <b>F12</b> เลือกแถบ <b>Console</b> แล้วก๊อปปี้โค้ดด้านล่างไปวางแล้วกด Enter ระบบจะคัดลอกรายชื่อทั้งหมดมาให้เอามาวางในช่องด้านล่างนี้:
     </p>
-    <div class="grid-2">
-      <div>
-        <label>ไฟล์กำลังติดตาม (following.json)</label>
-        <input type="file" id="followingFile" accept=".json">
-      </div>
-      <div>
-        <label>ไฟล์ผู้ติดตาม (followers_1.json)</label>
-        <input type="file" id="followersFile" accept=".json">
-      </div>
-    </div>
-    <button class="btn" onclick="analyzeJSON()">ประมวลผลไฟล์ JSON</button>
+    <div class="code-box" id="consoleScript"></div>
+    <button class="btn" style="margin-bottom: 12px;" onclick="copyConsoleScript()">คัดลอกโค้ดสแกนสด (เอาไปวางใน Console)</button>
+
+    <textarea id="livePasteBox" style="height:90px; font-family:monospace;" placeholder='วางข้อมูลที่ได้จาก Console ที่นี่ (รูปแบบ {"following":[...],"followers":[...]})'></textarea>
+    <button class="btn" onclick="parseLivePaste()">ประมวลผลข้อมูลสด</button>
   </div>
 
-  <!-- สรุปตัวเลข -->
+  <!-- ตัวเลขสรุป -->
   <div class="stats">
     <div class="stat-box">
       <div class="stat-num" id="statFollowing">0</div>
@@ -143,148 +136,254 @@
     </div>
     <div class="stat-box">
       <div class="stat-num danger" id="statUnfollowers">0</div>
-      <div class="stat-label">ไม่ติดตามกลับ</div>
+      <div class="stat-label">ไม่ฟอลกลับ</div>
     </div>
   </div>
 
-  <!-- รายชื่อผลลัพธ์ -->
+  <!-- รายชื่อ -->
   <div class="panel active">
-    <div class="result-header">
-      <h3 style="font-size: 1.05rem;">รายชื่อที่ไม่ฟอลกลับ (กดเพื่อไปตรวจสอบ)</h3>
-      <input type="text" id="searchBox" placeholder="ค้นหาชื่อในรายการ..." style="width: 200px; margin-bottom: 0;" oninput="filterResults()">
+    <div class="filter-bar">
+      <button class="chip active" id="f-unfollow" onclick="setMode('unfollow')">ไม่ฟอลเรากลับ (<span id="c-unfollow">0</span>)</button>
+      <button class="chip" id="f-unchecked" onclick="setMode('unchecked')">ยังไม่ได้เช็ก (<span id="c-unchecked">0</span>)</button>
+      <button class="chip" id="f-fans" onclick="setMode('fans')">ฟอลเราแต่เราไม่ฟอลกลับ (<span id="c-fans">0</span>)</button>
     </div>
-    <ul id="resultList" class="user-list">
-      <li style="color: var(--muted); text-align: center; padding: 20px;">ยังไม่มีข้อมูล กดปุ่ม "ทดลองโหลดข้อมูลจำลอง" ด้านบนเพื่อดูตัวอย่างได้เลย</li>
-    </ul>
+
+    <input type="text" id="searchBox" placeholder="🔍 ค้นหาชื่อไอจี..." oninput="render()">
+
+    <ul id="resultList" class="user-list"></ul>
   </div>
 
-  <script>
-    let unfollowersData = [];
+<script>
+  let state = {
+    following: [],
+    followers: [],
+    checked: {},
+    mode: 'unfollow'
+  };
 
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', (tab === 'sim' && i === 0) || (tab === 'json' && i === 1));
-      });
-      document.getElementById('tab-sim').classList.toggle('active', tab === 'sim');
-      document.getElementById('tab-json').classList.toggle('active', tab === 'json');
+  // โค้ดสำหรับรันใน Console หน้าเว็บ instagram.com เพื่อดึงข้อมูลสดผ่าน Session ของผู้ใช้เอง
+  const liveScannerCode = `(async()=>{console.log("กำลังดึงข้อมูลจาก IG...");const uid=document.cookie.match(/ds_user_id=(\\d+)/)?.[1];if(!uid)return alert("กรุณาล็อกอินที่เว็บ instagram.com ก่อนครับ");async function fetchAll(hash,edge){let list=[],after=null,hasNext=true;while(hasNext){const v=encodeURIComponent(JSON.stringify({id:uid,include_reel:false,fetch_mutual:false,first:50,after}));const r=await fetch("https://www.instagram.com/graphql/query/?query_hash="+hash+"&variables="+v).then(x=>x.json());const d=r.data.user[edge];d.edges.forEach(e=>list.push(e.node.username));hasNext=d.page_info.has_next_page;after=d.page_info.end_cursor;console.log(edge+": "+list.length);await new Promise(s=>setTimeout(s,1200));}return list;}const following=await fetchAll("3dec7e2c57367ef3da3d987d89f9dbc8","edge_follow");const followers=await fetchAll("c76146de99bb02f6415203be841dd25a","edge_followed_by");const out=JSON.stringify({following,followers});prompt("ดึงข้อมูลสำเร็จ! กด Ctrl+C เพื่อคัดลอกข้อความด้านล่างไปวางในเว็บ:",out);})();`;
+  document.getElementById('consoleScript').textContent = liveScannerCode;
+
+  function switchTab(t) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (t==='zip'&&i===0)||(t==='live'&&i===1)));
+    document.getElementById('tab-zip').classList.toggle('active', t === 'zip');
+    document.getElementById('tab-live').classList.toggle('active', t === 'live');
+  }
+
+  function showStatus(text, isError = false) {
+    const el = document.getElementById('statusMsg');
+    el.style.display = 'block';
+    el.style.background = isError ? '#3a121a' : '#123524';
+    el.style.color = isError ? '#ff6b81' : '#58d68d';
+    el.textContent = text;
+  }
+
+  // แยกชื่อไอจีจาก URL ของ Instagram (รองรับโครงสร้างใหม่ _u/username)
+  function cleanUsername(str) {
+    if (!str) return null;
+    str = str.trim();
+    if (str.includes('instagram.com')) {
+      str = str.replace(/https?:\/\/(www\.)?instagram\.com\/(_u\/)?/i, '').split('/')[0].split('?')[0];
     }
+    str = str.replace(/^@/, '').toLowerCase();
+    return /^[a-z0-9._]+$/.test(str) ? str : null;
+  }
 
-    function loadDemoData() {
-      const demoFollowing = [
-        "cristiano", "lalalalisa_m", "friend_somchai", "shop_bkk_official",
-        "ex_classmate99", "cafe_hopper_th", "gaming_buddy_01", "secret_crush_ig"
-      ];
-      const demoFollowers = [
-        "friend_somchai", "gaming_buddy_01", "cafe_hopper_th"
-      ];
-      document.getElementById('followingInput').value = demoFollowing.join('\n');
-      document.getElementById('followersInput').value = demoFollowers.join('\n');
-      
-      const log = document.getElementById('botLog');
-      log.style.display = 'block';
-      log.textContent = `[System] กำลังดึงรายการของ @${document.getElementById('ownerName').value || 'user'} ... เปรียบเทียบเซตข้อมูลสำเร็จ!`;
-      analyzeManual();
+  // แกะรายชื่อจาก JSON ของ Instagram (รองรับทั้งเวอร์ชันเก่าและใหม่ปี 2025-2026)
+  function parseIGJson(text) {
+    const data = JSON.parse(text);
+    let items = [];
+    if (Array.isArray(data)) items = data;
+    else if (data.relationships_following) items = data.relationships_following;
+    else {
+      const key = Object.keys(data).find(k => Array.isArray(data[k]));
+      if (key) items = data[key];
     }
+    const result = [];
+    items.forEach(item => {
+      const entry = item?.string_list_data?.[0];
+      const raw = entry?.value || item?.title || entry?.href;
+      const u = cleanUsername(raw);
+      if (u) result.push(u);
+    });
+    return result;
+  }
 
-    function analyzeManual() {
-      const followingRaw = document.getElementById('followingInput').value;
-      const followersRaw = document.getElementById('followersInput').value;
+  // แกะรายชื่อจากไฟล์ HTML ของ Instagram (กรณีผู้ใช้ลืมเปลี่ยน HTML เป็น JSON ตอนกดโหลด)
+  function parseIGHtml(htmlText) {
+    const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+    const links = doc.querySelectorAll('a[href*="instagram.com"]');
+    const result = [];
+    links.forEach(a => {
+      const u = cleanUsername(a.getAttribute('href')) || cleanUsername(a.textContent);
+      if (u) result.push(u);
+    });
+    return result;
+  }
 
-      const following = followingRaw.split('\n').map(s => s.trim().replace(/^@/, '').toLowerCase()).filter(Boolean);
-      const followersSet = new Set(followersRaw.split('\n').map(s => s.trim().replace(/^@/, '').toLowerCase()).filter(Boolean));
+  async function handleFiles(fileList) {
+    if (!fileList || fileList.length === 0) return;
+    showStatus('กำลังอ่านไฟล์...');
+    let following = [];
+    let followers = [];
 
-      processComparison(following, followersSet);
-    }
+    try {
+      for (const file of fileList) {
+        const name = file.name.toLowerCase();
+        if (name.endsWith('.zip')) {
+          const zip = await JSZip.loadAsync(file);
+          for (const [path, zipEntry] of Object.entries(zip.files)) {
+            if (zipEntry.dir) continue;
+            const lowerPath = path.toLowerCase();
+            // ข้ามไฟล์ที่ไม่ใช่รายชื่อหลัก เช่น close_friends, pending, recently_unfollowed
+            if (lowerPath.includes('pending') || lowerPath.includes('unfollowed') || lowerPath.includes('close_friends') || lowerPath.includes('restricted') || lowerPath.includes('blocked')) continue;
 
-    // ดึงชื่อจากโครงสร้างไฟล์ JSON ของ Instagram (รองรับทั้งรูปแบบเก่าและใหม่)
-    function extractUsernamesFromIGJson(jsonData) {
-      let list = [];
-      if (Array.isArray(jsonData)) {
-        list = jsonData;
-      } else if (jsonData.relationships_following) {
-        list = jsonData.relationships_following;
-      } else {
-        const firstArrayKey = Object.keys(jsonData).find(k => Array.isArray(jsonData[k]));
-        if (firstArrayKey) list = jsonData[firstArrayKey];
+            if (lowerPath.includes('following.') && (lowerPath.endsWith('.json') || lowerPath.endsWith('.html'))) {
+              const content = await zipEntry.async('string');
+              const parsed = lowerPath.endsWith('.json') ? parseIGJson(content) : parseIGHtml(content);
+              following.push(...parsed);
+            } else if (/followers(_\d+)?\.(json|html)$/.test(lowerPath)) {
+              const content = await zipEntry.async('string');
+              const parsed = lowerPath.endsWith('.json') ? parseIGJson(content) : parseIGHtml(content);
+              followers.push(...parsed);
+            }
+          }
+        } else if (name.endsWith('.json') || name.endsWith('.html')) {
+          const content = await file.text();
+          const parsed = name.endsWith('.json') ? parseIGJson(content) : parseIGHtml(content);
+          if (name.includes('following')) following.push(...parsed);
+          else if (name.includes('follower')) followers.push(...parsed);
+        }
       }
 
-      const usernames = [];
-      list.forEach(item => {
-        const val = item?.string_list_data?.[0]?.value || item?.title;
-        if (val) usernames.push(val.trim().toLowerCase());
-      });
-      return usernames;
-    }
-
-    async function analyzeJSON() {
-      const followingFile = document.getElementById('followingFile').files[0];
-      const followersFile = document.getElementById('followersFile').files[0];
-
-      if (!followingFile || !followersFile) {
-        alert('กรุณาเลือกทั้งไฟล์ following.json และ followers_1.json ก่อนครับ');
+      if (following.length === 0 && followers.length === 0) {
+        showStatus('ไม่พบไฟล์รายชื่อ following หรือ followers ในไฟล์ที่เลือก กรุณาตรวจสอบไฟล์อีกครั้ง', true);
         return;
       }
 
-      try {
-        const followingJson = JSON.parse(await followingFile.text());
-        const followersJson = JSON.parse(await followersFile.text());
+      state.following = [...new Set(following)];
+      state.followers = [...new Set(followers)];
+      saveAndRender('โหลดข้อมูลสำเร็จ! พบคนที่คุณติดตาม ' + state.following.length + ' คน');
+    } catch (e) {
+      showStatus('เกิดข้อผิดพลาดในการอ่านไฟล์: ' + e.message, true);
+    }
+  }
 
-        const following = extractUsernamesFromIGJson(followingJson);
-        const followersSet = new Set(extractUsernamesFromIGJson(followersJson));
+  function copyConsoleScript() {
+    navigator.clipboard.writeText(liveScannerCode);
+    showStatus('คัดลอกโค้ดแล้ว! เปิดเว็บ instagram.com กด F12 > Console แล้ววางโค้ดได้เลย');
+  }
 
-        processComparison(following, followersSet);
-      } catch (err) {
-        alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง: ' + err.message);
-      }
+  function parseLivePaste() {
+    try {
+      const raw = document.getElementById('livePasteBox').value.trim();
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.following) || !Array.isArray(data.followers)) throw new Error('รูปแบบไม่ถูกต้อง');
+      state.following = [...new Set(data.following.map(cleanUsername).filter(Boolean))];
+      state.followers = [...new Set(data.followers.map(cleanUsername).filter(Boolean))];
+      saveAndRender('ประมวลผลข้อมูลสดสำเร็จ!');
+    } catch (e) {
+      showStatus('ข้อมูลที่วางไม่ถูกต้อง กรุณาวาง JSON ที่ได้จากสคริปต์', true);
+    }
+  }
+
+  function setMode(m) {
+    state.mode = m;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('f-' + m).classList.add('active');
+    render();
+  }
+
+  function toggleCheck(u) {
+    state.checked[u] = !state.checked[u];
+    localStorage.setItem('ig_radar_state_v2', JSON.stringify(state));
+    render();
+  }
+
+  function clearSavedData() {
+    if (!confirm('ต้องการล้างข้อมูลรายชื่อทั้งหมดที่บันทึกไว้ใช่หรือไม่?')) return;
+    localStorage.removeItem('ig_radar_state_v2');
+    state = { following: [], followers: [], checked: {}, mode: 'unfollow' };
+    render();
+    showStatus('ล้างข้อมูลเรียบร้อยแล้ว');
+  }
+
+  function saveAndRender(msg) {
+    localStorage.setItem('ig_radar_state_v2', JSON.stringify(state));
+    if (msg) showStatus(msg);
+    render();
+  }
+
+  function render() {
+    const followersSet = new Set(state.followers);
+    const followingSet = new Set(state.following);
+
+    const unfollowers = state.following.filter(u => !followersSet.has(u));
+    const unchecked = unfollowers.filter(u => !state.checked[u]);
+    const fans = state.followers.filter(u => !followingSet.has(u));
+
+    document.getElementById('statFollowing').textContent = state.following.length;
+    document.getElementById('statFollowers').textContent = state.followers.length;
+    document.getElementById('statUnfollowers').textContent = unfollowers.length;
+
+    document.getElementById('c-unfollow').textContent = unfollowers.length;
+    document.getElementById('c-unchecked').textContent = unchecked.length;
+    document.getElementById('c-fans').textContent = fans.length;
+
+    let list = unfollowers;
+    if (state.mode === 'unchecked') list = unchecked;
+    if (state.mode === 'fans') list = fans;
+
+    const q = document.getElementById('searchBox').value.trim().toLowerCase();
+    if (q) list = list.filter(u => u.includes(q));
+
+    const ul = document.getElementById('resultList');
+    if (state.following.length === 0 && state.followers.length === 0) {
+      ul.innerHTML = `<li style="color:var(--muted);text-align:center;padding:24px;">อัปโหลดไฟล์ .zip ที่ได้จาก Instagram ด้านบนเพื่อเริ่มสแกนรายชื่อจริงได้เลย</li>`;
+      return;
+    }
+    if (list.length === 0) {
+      ul.innerHTML = `<li style="color:var(--success);text-align:center;padding:24px;">ไม่มีรายชื่อในหมวดนี้ 🎉</li>`;
+      return;
     }
 
-    function processComparison(followingList, followersSet) {
-      const uniqueFollowing = [...new Set(followingList)];
-      unfollowersData = uniqueFollowing.filter(user => !followersSet.has(user));
-
-      document.getElementById('statFollowing').textContent = uniqueFollowing.length;
-      document.getElementById('statFollowers').textContent = followersSet.size;
-      document.getElementById('statUnfollowers').textContent = unfollowersData.length;
-
-      renderList(unfollowersData);
-    }
-
-    function renderList(users) {
-      const ul = document.getElementById('resultList');
-      if (users.length === 0) {
-        ul.innerHTML = `<li style="color: var(--success); text-align: center; padding: 20px;">ทุกคนที่คุณติดตาม ฟอลคุณกลับครบทุกคน!</li>`;
-        return;
-      }
-
-      ul.innerHTML = users.map(u => `
-        <li class="user-item" id="row-${u}">
+    ul.innerHTML = list.map(u => {
+      const isChecked = !!state.checked[u];
+      return `
+        <li class="user-item ${isChecked ? 'checked' : ''}">
           <div class="user-info">
             <div class="avatar">${u.charAt(0).toUpperCase()}</div>
             <div>
               <div class="username">@${u}</div>
-              <div style="font-size: 0.75rem; color: var(--muted);">ไม่ได้ติดตามคุณกลับ</div>
+              <div style="font-size:0.74rem;color:var(--muted);">
+                ${state.mode === 'fans' ? 'ติดตามคุณอยู่ แต่คุณไม่ได้ฟอลกลับ' : 'คุณติดตามอยู่ แต่ไม่ฟอลคุณกลับ'}
+              </div>
             </div>
           </div>
           <div class="actions">
             <a class="inspect-link" href="https://www.instagram.com/${encodeURIComponent(u)}/" target="_blank" rel="noopener">
-              ไปส่องโปรไฟล์ ↗
+              ส่องโปรไฟล์ ↗
             </a>
-            <button class="check-btn" onclick="toggleCheck('${u}')">เช็กแล้ว ✓</button>
+            <button class="check-btn" onclick="toggleCheck('${u}')">
+              ${isChecked ? 'เช็กแล้ว ✓' : 'ทำเครื่องหมาย'}
+            </button>
           </div>
         </li>
-      `).join('');
-    }
+      `;
+    }).join('');
+  }
 
-    function toggleCheck(username) {
-      const row = document.getElementById('row-' + username);
-      if (row) row.classList.toggle('checked');
+  // โหลดข้อมูลเดิมที่เคยสแกนค้างไว้ขึ้นมาอัตโนมัติ
+  (function init() {
+    const saved = localStorage.getItem('ig_radar_state_v2');
+    if (saved) {
+      try {
+        state = Object.assign(state, JSON.parse(saved));
+      } catch (e) {}
     }
-
-    function filterResults() {
-      const q = document.getElementById('searchBox').value.trim().toLowerCase();
-      const filtered = unfollowersData.filter(u => u.includes(q));
-      renderList(filtered);
-    }
-  </script>
+    render();
+  })();
+</script>
 </body>
 </html>

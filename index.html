@@ -1,301 +1,290 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>C++ 3D Sandbox (Multi-Includes)</title>
-    <style>
-        :root {
-            --bg-color: #0f111a;
-            --panel-bg: rgba(21, 25, 40, 0.85);
-            --accent: #00e5ff;
-            --error: #ff3366;
-            --text-main: #e0e6ed;
-            --comment: #637777;
-            --keyword: #ff7b72;
-        }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
-        
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-        }
-
-        #viewport-3d {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
-        }
-
-        #top-bar {
-            position: absolute;
-            top: env(safe-area-inset-top, 10px);
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            display: flex;
-            gap: 15px;
-            background: var(--panel-bg);
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 1px solid #2a3143;
-            backdrop-filter: blur(5px);
-        }
-
-        button {
-            background: none; border: none; color: white;
-            font-size: 16px; font-weight: bold; padding: 5px 10px;
-            cursor: pointer;
-        }
-        
-        .btn-run { color: #00e5ff; }
-        .btn-stop { color: #ff3366; }
-
-        #bottom-editor {
-            position: absolute;
-            bottom: env(safe-area-inset-bottom, 0);
-            left: env(safe-area-inset-left, 0);
-            right: env(safe-area-inset-right, 0);
-            height: 45%; 
-            background: var(--panel-bg);
-            border-top: 2px solid var(--accent);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #code-area {
-            flex-grow: 1;
-            background: #151928;
-            color: #c3ccdf;
-            border: none;
-            padding: 15px;
-            font-size: 14px;
-            line-height: 1.5;
-            resize: none;
-            outline: none;
-        }
-
-        .error-text { color: var(--error); }
-        .success-text { color: #00e5ff; }
-        .sys-text { color: #a6accd; }
-
-        #console-area {
-            height: 50px; /* ขยายคอนโซลนิดนึงให้เห็นตอนโหลด Lib */
-            background: #0a0c13;
-            color: #00e5ff;
-            font-size: 12px;
-            padding: 5px 10px;
-            border-top: 1px solid #2a3143;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IG Unfollow Radar - ระบบตรวจสอบคนไม่ฟอลกลับ</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --card: #1a1a22;
+      --border: #2e2e3a;
+      --accent: #e1306c;
+      --accent-grad: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      --text: #f1f1f5;
+      --muted: #9090a0;
+      --success: #2ecc71;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 16px; max-width: 760px; margin: 0 auto; }
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    header { text-align: center; padding: 20px 0; }
+    header h1 { background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.8rem; margin-bottom: 6px; }
+    header p { color: var(--muted); font-size: 0.9rem; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn { flex: 1; padding: 12px; background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .tab-btn.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
+
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; display: none; }
+    .panel.active { display: block; }
+
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    input[type="text"], textarea, input[type="file"] {
+      width: 100%; background: #121218; border: 1px solid var(--border); color: var(--text);
+      padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 0.95rem;
+    }
+    textarea { height: 110px; resize: vertical; font-family: monospace; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 540px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 1rem;
+      font-weight: 700; cursor: pointer; color: #fff; background: var(--accent-grad); transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-secondary { background: #2c2c3a; margin-top: 8px; font-size: 0.9rem; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat-box { background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: 12px; text-align: center; }
+    .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+    .stat-num.danger { color: #ff4d6d; }
+    .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap; }
+    .user-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .user-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #14141c; border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px;
+    }
+    .user-item.checked { opacity: 0.45; border-color: var(--success); }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--accent-grad);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;
+    }
+    .username { font-weight: 600; font-size: 0.95rem; }
+    .actions { display: flex; gap: 8px; align-items: center; }
+    .inspect-link {
+      text-decoration: none; background: #262635; color: #fff; padding: 7px 12px;
+      border-radius: 8px; font-size: 0.82rem; font-weight: 600; border: 1px solid #3a3a4e;
+    }
+    .inspect-link:hover { background: var(--accent); border-color: var(--accent); }
+    .check-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      padding: 7px 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+    }
+    .user-item.checked .check-btn { background: var(--success); color: #000; border-color: var(--success); font-weight: 700; }
+    .status-log { font-family: monospace; font-size: 0.82rem; color: #58d68d; background: #09090c; padding: 10px; border-radius: 8px; margin-bottom: 12px; display: none; }
+  </style>
 </head>
 <body>
 
-    <div id="viewport-3d"></div>
+  <header>
+    <h1>IG Unfollow Radar</h1>
+    <p>ระบบเปรียบเทียบเซตข้อมูล Following vs Followers พร้อมลิงก์ตรวจสอบโปรไฟล์</p>
+  </header>
 
-    <div id="top-bar">
-        <button class="btn-run" onclick="runSimulation()">▶ RUN</button>
-        <button class="btn-stop" onclick="resetScene()">↻ RESET</button>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('sim')">1. โหมดจำลอง / วางรายชื่อเอง</button>
+    <button class="tab-btn" onclick="switchTab('json')">2. โหมดอัปโหลดไฟล์ JSON (แม่นยำ 100%)</button>
+  </div>
+
+  <!-- โหมดที่ 1: จำลองการทำงาน / วางรายชื่อ -->
+  <div id="tab-sim" class="panel active">
+    <label>ชื่อบัญชีเจ้าของ (Target Account)</label>
+    <input type="text" id="ownerName" placeholder="เช่น my_ig_account" value="my_ig_account">
+
+    <div id="botLog" class="status-log"></div>
+
+    <div class="grid-2">
+      <div>
+        <label>กำลังติดตาม (Following) - บรรทัดละ 1 ชื่อ</label>
+        <textarea id="followingInput" placeholder="user_a&#10;user_b&#10;user_c"></textarea>
+      </div>
+      <div>
+        <label>ผู้ติดตาม (Followers) - บรรทัดละ 1 ชื่อ</label>
+        <textarea id="followersInput" placeholder="user_a&#10;user_c"></textarea>
+      </div>
     </div>
 
-    <div id="bottom-editor">
-        <textarea id="code-area" spellcheck="false">#include <iostream>
-#include <string>
-#include <vector>
-#include <Engine3D.h>
-#include <Math3D.h>
+    <button class="btn" onclick="analyzeManual()">สแกนหาคนไม่ฟอลกลับ</button>
+    <button class="btn btn-secondary" onclick="loadDemoData()">ทดลองโหลดข้อมูลจำลอง (Demo)</button>
+  </div>
 
-using namespace std;
-
-int main() {
-    // กำหนดพิกัดเริ่มต้น
-    float spawnX = 5.0;
-    float spawnY = 2.0;
-    float spawnZ = -2.0;
-
-    // สร้างกล่องตามพิกัด
-    CreateCube("PlayerBox", spawnX, spawnY, spawnZ);
-
-    return 0;
-}</textarea>
-        <div id="console-area"><div class="sys-text">> System Ready. Waiting for build...</div></div>
+  <!-- โหมดที่ 2: อัปโหลดไฟล์ JSON จาก Instagram -->
+  <div id="tab-json" class="panel">
+    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 14px;">
+      วิธีนี้ปลอดภัย 100% ไม่ต้องใช้บอทล็อกอิน: ขอไฟล์ข้อมูลจากเมนู <b>Accounts Center &gt; Download your information</b> เลือกเฉพาะ <b>Followers and following</b> ในรูปแบบ <b>JSON</b> แล้วนำไฟล์มาใส่ที่นี่
+    </p>
+    <div class="grid-2">
+      <div>
+        <label>ไฟล์กำลังติดตาม (following.json)</label>
+        <input type="file" id="followingFile" accept=".json">
+      </div>
+      <div>
+        <label>ไฟล์ผู้ติดตาม (followers_1.json)</label>
+        <input type="file" id="followersFile" accept=".json">
+      </div>
     </div>
+    <button class="btn" onclick="analyzeJSON()">ประมวลผลไฟล์ JSON</button>
+  </div>
 
-    <script>
-        // --- 1. ส่วนของ 3D Engine (เหมือนเดิม) ---
-        let scene, camera, renderer;
-        let objects = [];
+  <!-- สรุปตัวเลข -->
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-num" id="statFollowing">0</div>
+      <div class="stat-label">กำลังติดตาม</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statFollowers">0</div>
+      <div class="stat-label">ผู้ติดตาม</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num danger" id="statUnfollowers">0</div>
+      <div class="stat-label">ไม่ติดตามกลับ</div>
+    </div>
+  </div>
 
-        function init3D() {
-            const container = document.getElementById('viewport-3d');
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1e2d);
-            scene.fog = new THREE.Fog(0x1a1e2d, 10, 50);
+  <!-- รายชื่อผลลัพธ์ -->
+  <div class="panel active">
+    <div class="result-header">
+      <h3 style="font-size: 1.05rem;">รายชื่อที่ไม่ฟอลกลับ (กดเพื่อไปตรวจสอบ)</h3>
+      <input type="text" id="searchBox" placeholder="ค้นหาชื่อในรายการ..." style="width: 200px; margin-bottom: 0;" oninput="filterResults()">
+    </div>
+    <ul id="resultList" class="user-list">
+      <li style="color: var(--muted); text-align: center; padding: 20px;">ยังไม่มีข้อมูล กดปุ่ม "ทดลองโหลดข้อมูลจำลอง" ด้านบนเพื่อดูตัวอย่างได้เลย</li>
+    </ul>
+  </div>
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 5, 15);
-            camera.lookAt(0, 0, 0);
+  <script>
+    let unfollowersData = [];
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            container.appendChild(renderer.domElement);
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', (tab === 'sim' && i === 0) || (tab === 'json' && i === 1));
+      });
+      document.getElementById('tab-sim').classList.toggle('active', tab === 'sim');
+      document.getElementById('tab-json').classList.toggle('active', tab === 'json');
+    }
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(10, 20, 10);
-            scene.add(dirLight);
+    function loadDemoData() {
+      const demoFollowing = [
+        "cristiano", "lalalalisa_m", "friend_somchai", "shop_bkk_official",
+        "ex_classmate99", "cafe_hopper_th", "gaming_buddy_01", "secret_crush_ig"
+      ];
+      const demoFollowers = [
+        "friend_somchai", "gaming_buddy_01", "cafe_hopper_th"
+      ];
+      document.getElementById('followingInput').value = demoFollowing.join('\n');
+      document.getElementById('followersInput').value = demoFollowers.join('\n');
+      
+      const log = document.getElementById('botLog');
+      log.style.display = 'block';
+      log.textContent = `[System] กำลังดึงรายการของ @${document.getElementById('ownerName').value || 'user'} ... เปรียบเทียบเซตข้อมูลสำเร็จ!`;
+      analyzeManual();
+    }
 
-            const gridHelper = new THREE.GridHelper(30, 30, 0x00e5ff, 0x444444);
-            scene.add(gridHelper);
+    function analyzeManual() {
+      const followingRaw = document.getElementById('followingInput').value;
+      const followersRaw = document.getElementById('followersInput').value;
 
-            animate();
-        }
+      const following = followingRaw.split('\n').map(s => s.trim().replace(/^@/, '').toLowerCase()).filter(Boolean);
+      const followersSet = new Set(followersRaw.split('\n').map(s => s.trim().replace(/^@/, '').toLowerCase()).filter(Boolean));
 
-        function animate() {
-            requestAnimationFrame(animate);
-            objects.forEach(obj => {
-                obj.rotation.x += 0.01;
-                obj.rotation.y += 0.01;
-            });
-            renderer.render(scene, camera);
-        }
+      processComparison(following, followersSet);
+    }
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+    // ดึงชื่อจากโครงสร้างไฟล์ JSON ของ Instagram (รองรับทั้งรูปแบบเก่าและใหม่)
+    function extractUsernamesFromIGJson(jsonData) {
+      let list = [];
+      if (Array.isArray(jsonData)) {
+        list = jsonData;
+      } else if (jsonData.relationships_following) {
+        list = jsonData.relationships_following;
+      } else {
+        const firstArrayKey = Object.keys(jsonData).find(k => Array.isArray(jsonData[k]));
+        if (firstArrayKey) list = jsonData[firstArrayKey];
+      }
 
-        init3D();
+      const usernames = [];
+      list.forEach(item => {
+        const val = item?.string_list_data?.[0]?.value || item?.title;
+        if (val) usernames.push(val.trim().toLowerCase());
+      });
+      return usernames;
+    }
 
-        // --- 2. ระบบ Console แบบเพิ่มบรรทัดได้ ---
-        const consoleArea = document.getElementById('console-area');
+    async function analyzeJSON() {
+      const followingFile = document.getElementById('followingFile').files[0];
+      const followersFile = document.getElementById('followersFile').files[0];
 
-        function clearConsole() {
-            consoleArea.innerHTML = '';
-        }
+      if (!followingFile || !followersFile) {
+        alert('กรุณาเลือกทั้งไฟล์ following.json และ followers_1.json ก่อนครับ');
+        return;
+      }
 
-        function logConsole(msg, type="sys-text") {
-            const div = document.createElement('div');
-            div.className = type;
-            div.innerHTML = msg;
-            consoleArea.appendChild(div);
-            // เลื่อน scroll ลงล่างสุดอัตโนมัติ
-            consoleArea.scrollTop = consoleArea.scrollHeight; 
-        }
+      try {
+        const followingJson = JSON.parse(await followingFile.text());
+        const followersJson = JSON.parse(await followersFile.text());
 
-        function resetScene() {
-            objects.forEach(obj => scene.remove(obj));
-            objects = [];
-            clearConsole();
-            logConsole("> Scene reset.", "success-text");
-        }
+        const following = extractUsernamesFromIGJson(followingJson);
+        const followersSet = new Set(extractUsernamesFromIGJson(followersJson));
 
-        // --- 3. ระบบจำลองการ Compile & Run ---
-        async function runSimulation() {
-            resetScene();
-            const code = document.getElementById('code-area').value;
-            
-            logConsole("> Starting Build Task...", "sys-text");
+        processComparison(following, followersSet);
+      } catch (err) {
+        alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง: ' + err.message);
+      }
+    }
 
-            // ดึง #include ทั้งหมดจากโค้ด
-            const includeRegex = /#include\s+<([^>]+)>/g;
-            let matchInclude;
-            const includedLibs = [];
-            
-            while ((matchInclude = includeRegex.exec(code)) !== null) {
-                includedLibs.push(matchInclude[1]);
-            }
+    function processComparison(followingList, followersSet) {
+      const uniqueFollowing = [...new Set(followingList)];
+      unfollowersData = uniqueFollowing.filter(user => !followersSet.has(user));
 
-            // จำลองเวลาโหลด Library แต่ละตัวให้ดูเท่ๆ
-            for(let lib of includedLibs) {
-                logConsole(`> Linking &lt;${lib}&gt;... OK`);
-                // หน่วงเวลาเล็กน้อยให้เหมือนกำลัง Compile
-                await new Promise(r => setTimeout(r, 100)); 
-            }
+      document.getElementById('statFollowing').textContent = uniqueFollowing.length;
+      document.getElementById('statFollowers').textContent = followersSet.size;
+      document.getElementById('statUnfollowers').textContent = unfollowersData.length;
 
-            // ตรวจสอบ Library ที่จำเป็น
-            if (!includedLibs.includes('Engine3D.h')) {
-                logConsole("> Fatal Error: Cannot resolve 3D functions. Missing &lt;Engine3D.h&gt;", "error-text");
-                return;
-            }
+      renderList(unfollowersData);
+    }
 
-            // ตรวจสอบ using namespace std;
-            if (!code.includes('using namespace std;')) {
-                logConsole("> Warning: 'std' namespace not declared. Proceeding anyway...", "sys-text");
-            }
+    function renderList(users) {
+      const ul = document.getElementById('resultList');
+      if (users.length === 0) {
+        ul.innerHTML = `<li style="color: var(--success); text-align: center; padding: 20px;">ทุกคนที่คุณติดตาม ฟอลคุณกลับครบทุกคน!</li>`;
+        return;
+      }
 
-            // ตรวจสอบ Entry Point
-            const mainRegex = /int\s+main\s*\(\s*\)\s*\{([\s\S]*)\}/;
-            const mainMatch = code.match(mainRegex);
-            
-            if (!mainMatch) {
-                logConsole("> Error: Entry point 'int main()' not found.", "error-text");
-                return;
-            }
+      ul.innerHTML = users.map(u => `
+        <li class="user-item" id="row-${u}">
+          <div class="user-info">
+            <div class="avatar">${u.charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="username">@${u}</div>
+              <div style="font-size: 0.75rem; color: var(--muted);">ไม่ได้ติดตามคุณกลับ</div>
+            </div>
+          </div>
+          <div class="actions">
+            <a class="inspect-link" href="https://www.instagram.com/${encodeURIComponent(u)}/" target="_blank" rel="noopener">
+              ไปส่องโปรไฟล์ ↗
+            </a>
+            <button class="check-btn" onclick="toggleCheck('${u}')">เช็กแล้ว ✓</button>
+          </div>
+        </li>
+      `).join('');
+    }
 
-            const mainBody = mainMatch[1];
-            
-            // เริ่มจำลองการประมวลผลโค้ดใน main()
-            try {
-                let xValue = 0, yValue = 0, zValue = 0;
-                
-                const varRegex = /float\s+([a-zA-Z_]\w*)\s*=\s*([-0-9.]+);/g;
-                let match;
-                const variables = {}; 
+    function toggleCheck(username) {
+      const row = document.getElementById('row-' + username);
+      if (row) row.classList.toggle('checked');
+    }
 
-                while ((match = varRegex.exec(mainBody)) !== null) {
-                    variables[match[1]] = parseFloat(match[2]);
-                }
-
-                const cubeRegex = /CreateCube\s*\(\s*"([^"]+)"\s*,\s*([a-zA-Z_]\w*\vert{}[-0-9.]+)\s*,\s*([a-zA-Z_]\w*\vert{}[-0-9.]+)\s*,\s*([a-zA-Z_]\w*\vert{}[-0-9.]+)\s*\);/;
-                const cubeMatch = mainBody.match(cubeRegex);
-
-                if (cubeMatch) {
-                    const cubeName = cubeMatch[1];
-                    const getVal = (valStr) => variables[valStr] !== undefined ? variables[valStr] : parseFloat(valStr);
-                    
-                    xValue = getVal(cubeMatch[2]);
-                    yValue = getVal(cubeMatch[3]);
-                    zValue = getVal(cubeMatch[4]);
-
-                    if (isNaN(xValue) || isNaN(yValue) || isNaN(zValue)) {
-                        logConsole(`> Runtime Error: Undefined variable used in CreateCube.`, "error-text");
-                        return;
-                    }
-
-                    // สร้าง 3D Object
-                    const geometry = new THREE.BoxGeometry(2, 2, 2);
-                    const material = new THREE.MeshStandardMaterial({ color: 0x00e5ff });
-                    const cube = new THREE.Mesh(geometry, material);
-                    cube.position.set(xValue, yValue, zValue);
-                    scene.add(cube);
-                    objects.push(cube);
-                    
-                    logConsole(`> Executed: Created '${cubeName}' at (${xValue}, ${yValue}, ${zValue})`, "success-text");
-                } else {
-                    logConsole("> Build finished. 0 errors, 0 warnings. (No 3D objects created)", "success-text");
-                }
-
-            } catch (error) {
-                logConsole("> Syntax error inside main(). Missing semicolon?", "error-text");
-            }
-        }
-    </script>
+    function filterResults() {
+      const q = document.getElementById('searchBox').value.trim().toLowerCase();
+      const filtered = unfollowersData.filter(u => u.includes(q));
+      renderList(filtered);
+    }
+  </script>
 </body>
 </html>

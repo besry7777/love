@@ -1,803 +1,3362 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>กฎ 5 ข้อในการอยู่หอพักข้างวัดป่า</title>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>กฎ 5 ข้อในการอยู่หอพักข้างวัดป่า — 2D Horror Explainer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;800&family=Noto+Sans+Thai:wght@400;600;700&family=Prompt:wght@400;600;700;800&family=Sarabun:wght@400;600;700&display=swap"
+        rel="stylesheet" />
     <style>
         :root {
-            --bg: #090B0D; --text: #f0f0f0; --primary: #9D2026; --panel: #17251D; --accent: #C5A45B;
+            --bg-app: #090B0D;
+            --bg-panel: #111518;
+            --bg-card: #171D20;
+            --border-subtle: rgba(164, 170, 165, 0.18);
+            --text-main: #ECEFED;
+            --text-dim: #A4AAA5;
+            --accent-red: #9D2026;
+            --accent-red-hover: #B8272E;
+            --accent-yellow: #C5A45B;
+            --forest-green: #17251D;
+            --old-gray: #464746;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { 
-            background: var(--bg); color: var(--text); font-family: 'Prompt', sans-serif; 
-            display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
-        #canvas-container {
-            flex: 1; display: flex; justify-content: center; align-items: center;
-            background: #000; position: relative; overflow: hidden;
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
+            background: var(--bg-app);
+            color: var(--text-main);
+            font-family: "Prompt", "Kanit", "Noto Sans Thai", "Sarabun", system-ui, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        canvas {
-            max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+
+        .top-bar {
+            padding: calc(8px + var(--safe-top)) 12px 8px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+            z-index: 20;
         }
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
-            display: flex; flex-direction: column; padding: 20px;
+
+        .steps-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
         }
-        .panel {
-            background: rgba(23, 37, 29, 0.9); border: 1px solid var(--accent); border-radius: 12px;
-            padding: 15px; pointer-events: auto; backdrop-filter: blur(10px); margin-bottom: 10px;
+
+        .step-badge {
+            flex: 1;
+            min-height: 48px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 8px;
+            cursor: pointer;
+            text-align: center;
+            line-height: 1.2;
         }
-        .btn {
-            background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px;
-            font-family: 'Prompt', sans-serif; font-weight: 600; cursor: pointer; transition: 0.2s;
-            display: inline-flex; align-items: center; justify-content: center; width: 100%; margin-top: 8px;
+
+        .step-badge.active {
+            border-color: var(--accent-yellow);
+            background: rgba(197, 164, 91, 0.14);
+            color: #F6E9C8;
         }
-        .btn:active { transform: scale(0.95); }
-        .btn:disabled { background: #464746; cursor: not-allowed; }
-        .row { display: flex; gap: 10px; margin-top: 10px; }
-        .row .btn { margin-top: 0; }
-        
-        #controls {
-            padding: 15px 20px 30px; background: rgba(9, 11, 13, 0.95); display: flex; flex-direction: column; gap: 10px;
-            border-top: 1px solid #333; z-index: 10; padding-bottom: env(safe-area-inset-bottom, 30px);
+
+        .step-badge.primary-action {
+            background: var(--accent-red);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #FFF;
+            font-weight: 700;
         }
-        .scrubber { display: flex; align-items: center; gap: 10px; }
-        input[type="range"] {
-            flex: 1; accent-color: var(--primary); height: 6px; border-radius: 3px;
+
+        .step-badge.primary-action:active {
+            background: var(--accent-red-hover);
+            transform: scale(0.98);
         }
-        .time-display { font-size: 14px; font-variant-numeric: tabular-nums; width: 90px; text-align: center; }
-        
-        #sync-editor {
-            position: absolute; right: -300px; top: 20px; width: 280px; height: calc(100% - 150px);
-            background: var(--panel); border: 1px solid var(--accent); border-radius: 12px;
-            padding: 15px; pointer-events: auto; transition: 0.3s; overflow-y: auto; z-index: 20;
+
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
         }
-        #sync-editor.open { right: 20px; }
-        .sync-item {
-            background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px;
+
+        .status-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: rgba(197, 164, 91, 0.12);
+            border: 1px solid rgba(197, 164, 91, 0.32);
+            color: var(--accent-yellow);
         }
-        .sync-item-title { font-weight: 600; margin-bottom: 4px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sync-controls { display: flex; justify-content: space-between; align-items: center; }
-        .sync-btn { background: #333; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
-        
-        #export-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100; pointer-events: auto;
+
+        .status-strip.synced {
+            background: rgba(23, 37, 29, 0.72);
+            border-color: rgba(164, 170, 165, 0.35);
+            color: #C7E3D0;
         }
-        .progress-bar { width: 80%; height: 8px; background: #333; border-radius: 4px; margin: 20px 0; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s; }
-        #export-result { display: none; flex-direction: column; align-items: center; gap: 15px; width: 80%; max-width: 400px; }
-        #export-result video { width: 100%; border-radius: 8px; border: 1px solid var(--accent); }
+
+        .sync-toggle-btn {
+            min-height: 36px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .sync-drawer {
+            display: none;
+            max-height: 36dvh;
+            overflow-y: auto;
+            background: #0E1214;
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 10px 12px;
+            z-index: 19;
+        }
+
+        .sync-drawer.open {
+            display: block;
+        }
+
+        .sync-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .sync-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sync-row-title {
+            font-size: 13px;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sync-row-time {
+            font-size: 12px;
+            color: var(--accent-yellow);
+            font-variant-numeric: tabular-nums;
+            min-width: 78px;
+            text-align: right;
+        }
+
+        .nudge-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nudge-btn {
+            min-width: 48px;
+            min-height: 48px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .nudge-btn:active {
+            background: var(--accent-red);
+        }
+
+        .stage-wrapper {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px 4px;
+            position: relative;
+            background: radial-gradient(circle at 50% 45%, #13191D 0%, #090B0D 80%);
+        }
+
+        .canvas-frame {
+            position: relative;
+            aspect-ratio: 9 / 16;
+            height: 100%;
+            max-height: 100%;
+            max-width: 100%;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(164, 170, 165, 0.18);
+            background: #090B0D;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas#stageCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .scene-pills {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 6px 12px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            scrollbar-width: none;
+        }
+
+        .scene-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scene-pill {
+            min-height: 48px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scene-pill.active {
+            background: rgba(157, 32, 38, 0.25);
+            border-color: var(--accent-red);
+            color: #FFF;
+        }
+
+        .bottom-controls {
+            padding: 6px 12px calc(10px + var(--safe-bottom));
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .scrubber-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time-label {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-dim);
+            min-width: 84px;
+            text-align: center;
+        }
+
+        input[type="range"]#timelineSlider {
+            flex: 1;
+            height: 36px;
+            accent-color: var(--accent-red);
+            background: transparent;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .transport-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .ctrl-btn {
+            min-width: 48px;
+            min-height: 48px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.97);
+        }
+
+        .ctrl-btn.play-main {
+            flex: 1.3;
+            background: #ECEFED;
+            color: #090B0D;
+            font-weight: 700;
+            border: none;
+        }
+
+        .ctrl-btn.export-main {
+            flex: 1.4;
+            background: var(--accent-red);
+            color: #FFF;
+            font-weight: 700;
+            border: none;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(9, 11, 13, 0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 100;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 440px;
+            max-height: 90dvh;
+            overflow-y: auto;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .quality-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            font-size: 14px;
+        }
+
+        .progress-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #090B0D;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-yellow));
+            transition: width 0.15s ease;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-dim);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .export-note {
+            font-size: 12px;
+            color: var(--accent-yellow);
+            line-height: 1.45;
+            background: rgba(197, 164, 91, 0.1);
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+
+        .export-error {
+            font-size: 13px;
+            color: #FF8A8E;
+            background: rgba(157, 32, 38, 0.25);
+            border: 1px solid var(--accent-red);
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result-video-wrap {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .result-video-wrap video {
+            width: 100%;
+            max-height: 44dvh;
+            border-radius: 12px;
+            background: #000;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .modal-actions>* {
+            flex: 1;
+            min-height: 48px;
+        }
+
+        a.download-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+        }
     </style>
 </head>
+
 <body>
 
-<div id="canvas-container">
-    <canvas id="main-canvas" width="1080" height="1920"></canvas>
-    
-    <div id="ui-layer">
-        <div class="panel" id="setup-panel">
-            <h3 style="color:var(--accent); font-size: 16px;">1. นำเข้าเสียงพากย์ (Voiceover)</h3>
-            <p style="font-size: 12px; color: #A4AAA5; margin-top: 5px;">ระบบจะคำนวณจังหวะภาพตามเสียงอัตโนมัติ</p>
-            <input type="file" id="audio-upload" accept="audio/*" style="display:none;">
-            <button class="btn" onclick="document.getElementById('audio-upload').click()">อัปโหลดไฟล์เสียง</button>
-            <button class="btn" id="btn-toggle-sync" style="background:#464746; display:none;" onclick="document.getElementById('sync-editor').classList.toggle('open')">ปรับแต่งจุดซิงก์ (Sync Editor)</button>
+    <input type="file" id="audioFileInput" accept="audio/*" style="display:none" />
+
+    <header class="top-bar">
+        <div class="steps-row">
+            <button type="button" class="step-badge active" id="btnImportAudio">
+                <span class="step-num">1</span>
+                <span>นำเข้าเสียงพากย์</span>
+            </button>
+            <button type="button" class="step-badge" id="btnStepPreview">
+                <span class="step-num">2</span>
+                <span>ดูตัวอย่าง</span>
+            </button>
+            <button type="button" class="step-badge primary-action" id="btnStepExport">
+                <span class="step-num">3</span>
+                <span>สร้างวิดีโอ</span>
+            </button>
         </div>
-    </div>
-    
-    <div id="sync-editor">
-        <h3 style="color:var(--accent); font-size: 14px; margin-bottom: 10px;">ปรับจุดซิงก์ (วินาที)</h3>
-        <div id="sync-list"></div>
-        <button class="btn" onclick="document.getElementById('sync-editor').classList.remove('open')" style="background:#464746;">ปิด</button>
-    </div>
-    
-    <div id="export-overlay">
-        <div id="export-progress">
-            <h2 style="color:var(--accent);">กำลังสร้างวิดีโอ...</h2>
-            <p id="export-status" style="margin-top:10px; font-size:14px; text-align:center;">เตรียมการ (0%)</p>
-            <div class="progress-bar"><div class="progress-fill" id="export-fill"></div></div>
-            <button class="btn" id="btn-cancel-export" style="background:#464746;">ยกเลิก</button>
+        <div class="status-strip" id="syncStatusStrip">
+            <span id="syncStatusText">เวลาโดยประมาณ ยังไม่ซิงก์กับเสียงจริง</span>
+            <button type="button" class="sync-toggle-btn" id="btnToggleSyncDrawer">ปรับจุดซิงก์ ▾</button>
         </div>
-        <div id="export-result">
-            <h2 style="color:var(--accent);">วิดีโอพร้อมแล้ว!</h2>
-            <video id="final-video" controls playsinline></video>
-            <button class="btn" id="btn-save-video">บันทึกวิดีโอ / แชร์</button>
-            <button class="btn" onclick="document.getElementById('export-overlay').style.display='none'" style="background:#464746;">ปิด</button>
+    </header>
+
+    <section class="sync-drawer" id="syncDrawer" aria-label="ปรับจุดซิงก์">
+        <div class="sync-drawer-header">
+            <span>ปรับเวลาเริ่มฉากทีละ ±0.1 วินาที</span>
+            <button type="button" class="sync-toggle-btn" id="btnResetSync">รีเซ็ต</button>
         </div>
-    </div>
-</div>
+        <div id="syncRowsContainer"></div>
+    </section>
 
-<div id="controls">
-    <div class="scrubber">
-        <button class="btn" id="btn-play" style="width:auto; padding: 10px 20px;">▶</button>
-        <input type="range" id="timeline" min="0" max="100" value="0" step="0.01">
-        <div class="time-display" id="time-text">0.00 / 0.00</div>
-    </div>
-    <div class="row">
-        <button class="btn" id="btn-mute" style="background:#464746; flex:0.5;">🔊</button>
-        <button class="btn" id="btn-export" style="background:var(--primary); flex:1;">สร้างวิดีโอ (Export)</button>
-    </div>
-</div>
+    <main class="stage-wrapper" id="stageWrapper">
+        <div class="canvas-frame" id="canvasFrame">
+            <canvas id="stageCanvas" width="1080" height="1920"></canvas>
+        </div>
+    </main>
 
-<script>
-// ==========================================
-// 1. G DATA & CONFIG
-// ==========================================
-const G = {
-    project: "กฎ 5 ข้อในการอยู่หอพักข้างวัดป่า",
-    format: "vertical_9:16", style: "REF-NIGHT",
-    palette: { black: "#090B0D", green: "#17251D", gray: "#464746", yellow: "#C5A45B", red: "#9D2026", fog: "#A4AAA5", white: "#EBEBEB" },
-    script: [
-        { id: "S0", text: "ถ้าคุณต้องไปเช่าหอพักราคาถูก... ที่อยู่ติดกับวัดป่าแห่งหนึ่ง", bg: "room", char: "C1", pose: "sit", card: "none" },
-        { id: "S1", text: "อย่าเพิ่งดีใจ เพราะหอพักแห่งนี้มีกฎอยู่ 5 ข้อ และเจ้าของหอบอกว่า... ถ้าไม่อยากเจอเรื่องแปลก ๆ ต้องทำตามให้ครบ", bg: "room", char: "C2", pose: "stand", card: "title_card", cardText: "กฎ 5 ข้อ\nหอพักข้างวัดป่า", sfx: ["whoosh"] },
-        { id: "S2", text: "กฎข้อที่หนึ่ง หลังสามทุ่ม ห้ามเดินออกไปทางด้านหลังหอเด็ดขาด เพราะบางคืนคุณอาจเห็นพระเดินอยู่ในป่า... แต่ถ้ามองดี ๆ เท้าของท่านไม่ได้แตะพื้น", bg: "forest", card: "bignumber", cardText: "1", sfx: ["wind", "heartbeat"] },
-        { id: "S3", text: "กฎข้อที่สอง ถ้าได้ยินเสียงระฆังดังตอนตีสอง ห้ามเปิดหน้าต่างออกไปดู เพราะวัดแห่งนี้ไม่มีระฆังมานานหลายสิบปีแล้ว", bg: "room", char: "C1", pose: "scared", card: "bignumber", cardText: "2", sfx: ["bell"] },
-        { id: "S4", text: "กฎข้อที่สาม ถ้ามีคนมาเคาะประตูสามครั้งตอนเที่ยงคืน ห้ามถามว่าใคร และห้ามเปิดประตูเด็ดขาด โดยเฉพาะถ้าเสียงข้างนอกเป็นเสียงของคุณเอง", bg: "room_door", card: "bignumber", cardText: "3", sfx: ["knock"] },
-        { id: "S5", text: "กฎข้อที่สี่ ถ้าเห็นคนยืนอยู่ใต้ต้นไม้ใหญ่ข้างกำแพงวัด อย่าจ้องตาเขา และอย่านับจำนวนคนที่ยืนอยู่ตรงนั้น... เพราะบางครั้งมันอาจเพิ่มขึ้นมาอีกหนึ่งคน", bg: "forest_tree", card: "bignumber", cardText: "4", sfx: ["boom"] },
-        { id: "S6", text: "และกฎข้อที่ห้า ถ้าตื่นขึ้นมากลางดึกแล้วเห็นประตูห้องน้ำเปิดอยู่ ทั้งที่คุณจำได้ว่าปิดมันไว้... ให้หลับตาแล้วนอนนิ่ง ๆ จนกว่าจะได้ยินเสียงนาฬิกาปลุก", bg: "bathroom_door", char: "C1", pose: "sleep", card: "bignumber", cardText: "5", sfx: ["clock"] },
-        { id: "S7", text: "แต่มีสิ่งหนึ่งที่เจ้าของหอไม่ได้เขียนไว้ในกฎ...", bg: "room", char: "C2", pose: "stare", card: "none", sfx: ["whoosh"] },
-        { id: "S8", text: "ห้องที่คุณเช่าอยู่ คือห้องเดียวกับผู้เช่าคนก่อนที่หายตัวไป", bg: "room_dark", card: "none", sfx: ["glitch"] },
-        { id: "S9", text: "และเมื่อคืนนี้... มีคนเพิ่งมาเคาะประตูห้องคุณสามครั้ง", bg: "room_door", char: "C1", pose: "terrified", card: "none", sfx: ["knock", "knock"] },
-        { id: "S10", text: "โปรดติดตามตอนต่อไป...", bg: "black", card: "end_card", cardText: "จบ...", sfx: ["boom"] }
-    ],
-    characters: {
-        C1: { name: "ผู้เช่า", body: "thin", hair: "short_black", top: "#333333", bottom: "#111", heightScale: 1.0 },
-        C2: { name: "ป้า", body: "normal", hair: "tied_gray", top: "#17251D", bottom: "#111", heightScale: 0.95 }
-    }
-};
+    <nav class="scene-pills" id="scenePills" aria-label="เลือกฉาก"></nav>
 
-let syncData = [];
-let totalDuration = G.script.length * 5; // Default if no audio
-let isAudioLoaded = false;
-let audioBuffer = null;
-let audioRMS = [];
+    <footer class="bottom-controls">
+        <div class="scrubber-row">
+            <span class="time-label" id="timeDisplay">00:00 / 01:16</span>
+            <input type="range" id="timelineSlider" min="0" max="76.48" step="0.01" value="0" aria-label="แถบเวลา" />
+        </div>
+        <div class="transport-row">
+            <button type="button" class="ctrl-btn play-main" id="btnPlayPause">▶ เล่น</button>
+            <button type="button" class="ctrl-btn" id="btnMute">🔊 เสียง</button>
+            <button type="button" class="ctrl-btn" id="btnFullscreen">⛶ เต็มจอ</button>
+            <button type="button" class="ctrl-btn export-main" id="btnOpenExport">สร้างวิดีโอ</button>
+        </div>
+    </footer>
 
-// ==========================================
-// 2. AUDIO & SYNC ENGINE
-// ==========================================
-const actx = new (window.AudioContext || window.webkitAudioContext)();
-const segmenter = window.Intl && Intl.Segmenter ? new Intl.Segmenter('th', { granularity: 'word' }) : null;
-
-document.getElementById('audio-upload').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const arrayBuffer = await file.arrayBuffer();
-    audioBuffer = await actx.decodeAudioData(arrayBuffer);
-    analyzeAudioAndSync(audioBuffer);
-});
-
-function analyzeAudioAndSync(buffer) {
-    const data = buffer.getChannelData(0);
-    const sampleRate = buffer.sampleRate;
-    const windowSize = Math.floor(sampleRate * 0.02); // 20ms
-    audioRMS = [];
-    let maxRMS = 0;
-    
-    for (let i = 0; i < data.length; i += windowSize) {
-        let sum = 0;
-        for (let j = 0; j < windowSize && (i+j) < data.length; j++) {
-            sum += data[i+j] * data[i+j];
-        }
-        const rms = Math.sqrt(sum / windowSize);
-        audioRMS.push(rms);
-        if(rms > maxRMS) maxRMS = rms;
-    }
-    
-    const threshold = maxRMS * 0.08;
-    const pauses = []; // [timeInSeconds]
-    let isSilent = true;
-    let silentFrames = 0;
-    
-    for (let i = 0; i < audioRMS.length; i++) {
-        if (audioRMS[i] < threshold) {
-            silentFrames++;
-            if(!isSilent && silentFrames > 11) { // ~220ms
-                pauses.push((i * 0.02) - 0.1); 
-                isSilent = true;
-            }
-        } else {
-            isSilent = false;
-            silentFrames = 0;
-        }
-    }
-    
-    // Distribute Script over duration
-    totalDuration = buffer.duration;
-    syncData = [];
-    let totalWeight = 0;
-    const weights = G.script.map(s => {
-        let w = s.text.length;
-        totalWeight += w;
-        return w;
-    });
-    
-    let currentTime = 0.5; // Start offset
-    for(let i=0; i<G.script.length; i++) {
-        const estDuration = (weights[i] / totalWeight) * (totalDuration - 1.0);
-        let targetEnd = currentTime + estDuration;
-        
-        // Snap to nearest pause
-        let bestPause = targetEnd;
-        let minDiff = 999;
-        for(let p of pauses) {
-            if(p > currentTime && Math.abs(p - targetEnd) < 1.2) {
-                if(Math.abs(p - targetEnd) < minDiff) { minDiff = Math.abs(p - targetEnd); bestPause = p; }
-            }
-        }
-        
-        if (i === G.script.length - 1) bestPause = totalDuration - 0.5;
-        
-        syncData.push({ id: G.script[i].id, start: currentTime, end: bestPause, text: G.script[i].text, duration: bestPause - currentTime });
-        currentTime = bestPause;
-    }
-    
-    isAudioLoaded = true;
-    document.getElementById('setup-panel').style.display = 'none';
-    document.getElementById('btn-toggle-sync').style.display = 'block';
-    
-    document.getElementById('timeline').max = totalDuration;
-    buildSyncEditor();
-    
-    if(actx.state === 'suspended') actx.resume();
-}
-
-function buildSyncEditor() {
-    const list = document.getElementById('sync-list');
-    list.innerHTML = '';
-    syncData.forEach((s, i) => {
-        const d = document.createElement('div');
-        d.className = 'sync-item';
-        d.innerHTML = `
-            <div class="sync-item-title">ฉาก ${i+1}: ${s.text.substring(0, 15)}...</div>
-            <div class="sync-controls">
-                <button class="sync-btn" onclick="adjSync(${i}, -0.1)">-0.1s</button>
-                <span id="sync-val-${i}">${s.start.toFixed(1)}</span>
-                <button class="sync-btn" onclick="adjSync(${i}, 0.1)">+0.1s</button>
+    <div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true">
+        <div class="modal-card">
+            <div class="modal-title">
+                <span>สร้างไฟล์วิดีโอ 9:16 (30 FPS)</span>
+                <button type="button" class="sync-toggle-btn" id="btnCloseExportModal">ปิด</button>
             </div>
-        `;
-        list.appendChild(d);
-    });
-}
-window.adjSync = (index, delta) => {
-    if(index > 0) {
-        syncData[index].start += delta;
-        syncData[index-1].end += delta;
-        document.getElementById(`sync-val-${index}`).innerText = syncData[index].start.toFixed(1);
-        updateRender();
-    }
-};
 
-// ==========================================
-// 3. RENDER ENGINE (Canvas 9:16)
-// ==========================================
-const canvas = document.getElementById('main-canvas');
-const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
-const W = 1080; const H = 1920;
-let playTime = 0;
-let isPlaying = false;
-let reqAnim = null;
-let lastSfxTime = -1;
+            <div class="quality-toggle-row">
+                <div>
+                    <div style="font-weight:700;">คุณภาพสูง 1080p (1080×1920)</div>
+                    <div style="font-size:12px;color:var(--text-dim);" id="resHintText">ค่าเริ่มต้นมือถือ: 720×1280
+                        (เร็วกว่า)</div>
+                </div>
+                <input type="checkbox" id="chkHighRes" style="width:24px;height:24px;accent-color:var(--accent-red);" />
+            </div>
 
-function mulberry32(a) {
-    return function() {
-      var t = a += 0x6D2B79F5;
-      t = Math.imul(t ^ t >>> 15, t | 1);
-      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    }
-}
+            <div class="export-note" id="exportMethodInfo">
+                พร้อมสร้างวิดีโอจากเฟรมจริง 100% (ระบบจะเลือก WebCodecs MP4 หรือ MediaRecorder อัตโนมัติ)
+            </div>
 
-// Ensure fonts loaded
-document.fonts.ready.then(() => {
-    if(!isAudioLoaded) {
-        // Mock sync data for preview
-        let ct = 0;
-        syncData = G.script.map((s,i) => {
-            let d = (s.text.length / 15);
-            let obj = { id: s.id, start: ct, end: ct+d, text: s.text, duration: d };
-            ct += d; return obj;
-        });
-        totalDuration = ct;
-        document.getElementById('timeline').max = totalDuration;
-    }
-    updateRender();
-});
+            <div class="progress-box" id="exportProgressBox" style="display:none;">
+                <div class="progress-track">
+                    <div class="progress-fill" id="exportProgressFill"></div>
+                </div>
+                <div class="progress-meta">
+                    <span id="exportProgressPct">0%</span>
+                    <span id="exportProgressFrames">0 / 0 เฟรม</span>
+                    <span id="exportProgressElapsed">0.0s</span>
+                </div>
+            </div>
 
-function easeOutExpo(x) { return x === 1 ? 1 : 1 - Math.pow(2, -10 * x); }
-function easeInOutCubic(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+            <div class="export-error" id="exportErrorBox"></div>
 
-function getSceneAtTime(t) {
-    for(let i=0; i<syncData.length; i++) {
-        if(t >= syncData[i].start && t <= syncData[i].end) return { idx: i, data: G.script[i], sync: syncData[i] };
-    }
-    return t < 0 ? { idx:0, data: G.script[0], sync: syncData[0] } : { idx: syncData.length-1, data: G.script[syncData.length-1], sync: syncData[syncData.length-1] };
-}
+            <div class="result-video-wrap" id="exportResultWrap">
+                <video id="exportedVideoPlayer" controls playsinline></video>
+                <div style="font-size:12px;color:var(--text-dim);text-align:center;">
+                    หากปุ่มแชร์ไม่ทำงาน ให้กดค้างที่วิดีโอด้านบนเพื่อบันทึกลงเครื่อง
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="ctrl-btn export-main" id="btnShareVideo">บันทึก / แชร์</button>
+                    <a class="download-link-btn" id="btnDownloadVideo" download="dorm_5_rules.mp4">ดาวน์โหลดไฟล์</a>
+                </div>
+            </div>
 
-// Background Drawing
-const bgCache = {};
-function drawBg(ctx, type, time) {
-    if(!bgCache[type]) {
-        const oc = document.createElement('canvas');
-        oc.width = W; oc.height = H;
-        const octx = oc.getContext('2d');
-        
-        // REF-NIGHT style bases
-        const grad = octx.createLinearGradient(0,0,0,H);
-        grad.addColorStop(0, G.palette.black);
-        grad.addColorStop(1, G.palette.green);
-        octx.fillStyle = grad;
-        octx.fillRect(0,0,W,H);
-        
-        if(type.includes('room')) {
-            // Room glow
-            const rad = octx.createRadialGradient(W/2, H/3, 100, W/2, H/3, 800);
-            rad.addColorStop(0, 'rgba(197, 164, 91, 0.15)'); // yellow glow
-            rad.addColorStop(1, 'transparent');
-            octx.fillStyle = rad; octx.fillRect(0,0,W,H);
-            
-            // Floor
-            octx.fillStyle = G.palette.black;
-            octx.fillRect(0, H*0.7, W, H*0.3);
-            octx.strokeStyle = G.palette.gray; octx.lineWidth = 4;
-            octx.beginPath(); octx.moveTo(0, H*0.7); octx.lineTo(W, H*0.7); octx.stroke();
-            
-            if(type === 'room' || type === 'room_dark') {
-                // Window
-                octx.fillStyle = '#05070a';
-                octx.fillRect(W/2 - 200, 200, 400, 500);
-                octx.strokeStyle = G.palette.gray; octx.lineWidth = 10;
-                octx.strokeRect(W/2 - 200, 200, 400, 500);
-                octx.beginPath(); octx.moveTo(W/2, 200); octx.lineTo(W/2, 700); octx.stroke();
-                // Moon
-                if(type === 'room') {
-                    octx.fillStyle = G.palette.fog;
-                    octx.beginPath(); octx.arc(W/2 + 80, 300, 40, 0, Math.PI*2); octx.fill();
-                }
-            }
-            if(type === 'room_door' || type === 'bathroom_door') {
-                // Door
-                octx.fillStyle = '#111';
-                octx.fillRect(W/2 - 180, 150, 360, 1200);
-                octx.strokeStyle = G.palette.gray; octx.lineWidth = 8;
-                octx.strokeRect(W/2 - 180, 150, 360, 1200);
-                // Knob
-                octx.fillStyle = G.palette.fog;
-                octx.beginPath(); octx.arc(W/2 + 120, 750, 15, 0, Math.PI*2); octx.fill();
-                
-                if(type === 'bathroom_door') {
-                    // Ajar door
-                    octx.fillStyle = '#050505';
-                    octx.fillRect(W/2 - 180, 150, 80, 1200);
-                }
-            }
-        }
-        else if(type.includes('forest')) {
-            // Trees
-            octx.fillStyle = '#050709';
-            for(let i=0; i<8; i++) {
-                let tx = 100 + i*150;
-                octx.fillRect(tx, 0, 60, H);
-                // Branches
-                octx.beginPath(); octx.moveTo(tx+30, 400); octx.lineTo(tx+150, 300); octx.lineWidth = 20; octx.stroke();
-            }
-            // Fog
-            const fog = octx.createLinearGradient(0, H*0.4, 0, H);
-            fog.addColorStop(0, 'transparent');
-            fog.addColorStop(1, 'rgba(164, 170, 165, 0.2)');
-            octx.fillStyle = fog; octx.fillRect(0,0,W,H);
-        }
-        bgCache[type] = oc;
-    }
-    ctx.drawImage(bgCache[type], 0, 0);
-    
-    // Dynamic procedural elements
-    if(type === 'forest_tree' || type === 'forest') {
-        const rand = mulberry32(Math.floor(time * 10)); // flicker
-        if(rand() > 0.8) {
-            ctx.fillStyle = 'rgba(255,255,255,0.03)';
-            ctx.fillRect(0,0,W,H);
-        }
-        // Silhouette entity
-        if(type === 'forest_tree') {
-            ctx.fillStyle = '#000';
-            ctx.beginPath(); ctx.ellipse(W/2, H*0.7, 60, 150, 0, 0, Math.PI*2); ctx.fill();
-        }
-        if(type === 'forest' && (time%4) > 2) { // floating monk
-            ctx.fillStyle = '#000';
-            let floatY = H*0.6 + Math.sin(time*2)*20;
-            ctx.beginPath(); ctx.ellipse(W*0.7, floatY, 70, 180, 0, 0, Math.PI*2); ctx.fill();
-            // Head
-            ctx.beginPath(); ctx.arc(W*0.7, floatY-180, 40, 0, Math.PI*2); ctx.fill();
-        }
-    }
-}
+            <div class="modal-actions" id="exportStartActions">
+                <button type="button" class="ctrl-btn export-main" id="btnStartExport">เริ่มสร้างวิดีโอ</button>
+                <button type="button" class="ctrl-btn" id="btnCancelExport" style="display:none;">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
 
-function drawCharacter(ctx, charId, x, y, pose, time, rms) {
-    const c = G.characters[charId];
-    if(!c) return;
-    
-    ctx.save();
-    ctx.translate(x, y);
-    
-    // Scale for height & idle breathing
-    let scale = c.heightScale;
-    let bob = Math.sin(time * 3) * 5;
-    ctx.scale(scale, scale);
-    ctx.translate(0, bob);
-    
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath(); ctx.ellipse(0, 0, 100, 20, 0, 0, Math.PI*2); ctx.fill();
-    
-    // Capsule Body (REF-NIGHT style)
-    ctx.fillStyle = c.bottom;
-    ctx.fillRect(-45, -250, 90, 250); // Legs
-    
-    ctx.fillStyle = c.top;
-    ctx.beginPath(); ctx.roundRect(-60, -500, 120, 260, 30); ctx.fill(); // Torso
-    
-    // Head (~25% of height)
-    ctx.fillStyle = '#E5C298'; // Skin
-    let hY = -550;
-    
-    if(pose === 'sit') { ctx.translate(0, 100); hY = -500; }
-    if(pose === 'sleep') { ctx.rotate(Math.PI/2); ctx.translate(100, -200); }
-    
-    ctx.beginPath(); ctx.ellipse(0, hY, 75, 90, 0, 0, Math.PI*2); ctx.fill(); // Head base
-    
-    // Hair
-    ctx.fillStyle = c.hair.includes('gray') ? '#555' : '#111';
-    if(c.hair.includes('short')) {
-        ctx.beginPath(); ctx.arc(0, hY-20, 80, Math.PI, 0); ctx.fill();
-    } else {
-        ctx.beginPath(); ctx.arc(0, hY-10, 80, Math.PI, 0); ctx.fill();
-        ctx.beginPath(); ctx.arc(-70, hY+40, 30, 0, Math.PI*2); ctx.fill(); // Bun
-    }
-    
-    // Face
-    ctx.fillStyle = '#000';
-    if(pose === 'scared' || pose === 'terrified') {
-        ctx.beginPath(); ctx.ellipse(-25, hY-10, 10, 15, 0, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(25, hY-10, 10, 15, 0, 0, Math.PI*2); ctx.fill();
-        // Mouth
-        ctx.beginPath(); ctx.ellipse(0, hY+30, 15, rms > 0.02 ? 20 + rms*100 : 20, 0, 0, Math.PI*2); ctx.fill();
-    } else if(pose === 'sleep') {
-        ctx.lineWidth = 3; ctx.strokeStyle = '#000';
-        ctx.beginPath(); ctx.moveTo(-35, hY-10); ctx.lineTo(-15, hY-10); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(15, hY-10); ctx.lineTo(35, hY-10); ctx.stroke();
-    } else {
-        // Normal/Stare
-        ctx.beginPath(); ctx.arc(-25, hY-10, 5, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(25, hY-10, 5, 0, Math.PI*2); ctx.fill();
-        // Talk mouth
-        ctx.beginPath(); ctx.ellipse(0, hY+30, 10, rms > 0.02 ? 5 + rms*50 : 2, 0, 0, Math.PI*2); ctx.fill();
-    }
-    
-    ctx.restore();
-}
-
-function drawCard(ctx, cardType, text, progress) {
-    if(!cardType || cardType === 'none') return;
-    
-    ctx.save();
-    let anim = easeOutExpo(Math.min(progress * 2, 1));
-    let yOff = (1 - anim) * 50;
-    ctx.globalAlpha = anim;
-    
-    if(cardType === 'title_card') {
-        ctx.fillStyle = G.palette.white;
-        ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20;
-        ctx.beginPath(); ctx.roundRect(100, 200 + yOff, 600, 250, 20); ctx.fill();
-        ctx.shadowBlur = 0;
-        
-        ctx.fillStyle = G.palette.red;
-        ctx.fillRect(100, 200 + yOff, 15, 250);
-        
-        ctx.fillStyle = G.palette.black;
-        ctx.font = "bold 60px 'Prompt'";
-        let lines = text.split('\n');
-        lines.forEach((l, i) => ctx.fillText(l, 150, 290 + yOff + (i*70)));
-    }
-    else if(cardType === 'bignumber') {
-        ctx.fillStyle = G.palette.white;
-        ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 30;
-        ctx.beginPath(); ctx.roundRect(W/2 - 150, 300 + yOff, 300, 300, 40); ctx.fill();
-        ctx.shadowBlur = 0;
-        
-        ctx.fillStyle = G.palette.red;
-        ctx.font = "bold 180px 'Prompt'";
-        ctx.textAlign = 'center';
-        ctx.fillText(text, W/2, 510 + yOff);
-        
-        ctx.fillStyle = G.palette.gray;
-        ctx.font = "600 30px 'Prompt'";
-        ctx.fillText("กฎข้อที่", W/2, 360 + yOff);
-        ctx.textAlign = 'left';
-    }
-    else if(cardType === 'end_card') {
-        ctx.fillStyle = 'rgba(9, 11, 13, 0.9)';
-        ctx.fillRect(0,0,W,H);
-        
-        ctx.fillStyle = G.palette.white;
-        ctx.textAlign = 'center';
-        ctx.font = "bold 80px 'Prompt'";
-        ctx.fillText(text, W/2, H/2 + yOff);
-        ctx.textAlign = 'left';
-    }
-    ctx.restore();
-}
-
-function drawSubtitles(ctx, text, progress) {
-    if(!text) return;
-    ctx.save();
-    ctx.textAlign = 'center';
-    
-    // Split and reveal text based on progress
-    let words = segmenter ? Array.from(segmenter.segment(text)).map(s => s.segment) : text.split(' ');
-    let revealCount = Math.floor(progress * words.length);
-    let revText = words.slice(0, revealCount).join('');
-    
-    // Simple line wrap
-    let lines = [];
-    let currentLine = '';
-    words.slice(0, revealCount).forEach(w => {
-        if(ctx.measureText(currentLine + w).width > W - 100) {
-            lines.push(currentLine); currentLine = w;
-        } else {
-            currentLine += w;
-        }
-    });
-    if(currentLine) lines.push(currentLine);
-    
-    ctx.font = "bold 50px 'Prompt'";
-    let startY = H * 0.75 - (lines.length * 30);
-    
-    lines.forEach((line, i) => {
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = G.palette.black;
-        ctx.strokeText(line, W/2, startY + (i*65));
-        ctx.fillStyle = G.palette.white;
-        ctx.fillText(line, W/2, startY + (i*65));
-    });
-    
-    ctx.restore();
-}
-
-function renderAtTime(t) {
-    const sceneInfo = getSceneAtTime(t);
-    const scene = sceneInfo.data;
-    const sync = sceneInfo.sync;
-    
-    // Progress in current scene
-    let sProg = Math.max(0, Math.min(1, (t - sync.start) / sync.duration));
-    
-    // Global RMS logic for mouth/FX
-    let currRMS = 0;
-    if (audioRMS && audioRMS.length > 0) {
-        let frameIdx = Math.floor(t / 0.02);
-        if (frameIdx < audioRMS.length) currRMS = audioRMS[frameIdx];
-    }
-    
-    // 1. Draw Background
-    drawBg(ctx, scene.bg, t);
-    
-    // 2. Draw Characters
-    if(scene.char) {
-        drawCharacter(ctx, scene.char, W/2, H*0.8, scene.pose, t, currRMS);
-    }
-    
-    // 3. Draw Card
-    if(scene.card) {
-        // Blur bg slightly if card exists
-        if(scene.card !== 'none' && scene.card !== 'end_card') {
-            ctx.fillStyle = 'rgba(9,11,13,0.4)'; ctx.fillRect(0,0,W,H);
-        }
-        drawCard(ctx, scene.card, scene.cardText, sProg);
-    }
-    
-    // 4. Draw Subtitles
-    drawSubtitles(ctx, scene.text, sProg);
-    
-    // 5. Trigger SFX (Preview only, not in export rendering loop)
-    if(isPlaying && !isExporting && scene.sfx && lastSfxTime < sync.start) {
-        lastSfxTime = sync.start;
-        scene.sfx.forEach((fx, idx) => {
-            setTimeout(() => playSfx(fx), idx * 400); // Stagger multiple SFX
-        });
-    }
-}
-
-// ==========================================
-// 4. SFX SYNTHESIZER
-// ==========================================
-function playSfx(type) {
-    if(document.getElementById('btn-mute').textContent === '🔇') return;
-    const t = actx.currentTime;
-    
-    if(type === 'whoosh') {
-        const osc = actx.createOscillator(); const gain = actx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(200, t); osc.frequency.exponentialRampToValueAtTime(40, t+0.5);
-        gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.3, t+0.1); gain.gain.exponentialRampToValueAtTime(0.01, t+0.5);
-        osc.connect(gain); gain.connect(actx.destination); osc.start(t); osc.stop(t+0.5);
-    }
-    else if(type === 'knock') {
-        const osc = actx.createOscillator(); const gain = actx.createGain();
-        osc.type = 'triangle'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(20, t+0.1);
-        gain.gain.setValueAtTime(0.8, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.1);
-        osc.connect(gain); gain.connect(actx.destination); osc.start(t); osc.stop(t+0.1);
-    }
-    else if(type === 'boom') {
-        const osc = actx.createOscillator(); const gain = actx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(80, t); osc.frequency.exponentialRampToValueAtTime(20, t+1.5);
-        gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.01, t+1.5);
-        osc.connect(gain); gain.connect(actx.destination); osc.start(t); osc.stop(t+1.5);
-    }
-    else if(type === 'bell') {
-        const osc = actx.createOscillator(); const gain = actx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(600, t); osc.frequency.linearRampToValueAtTime(590, t+2);
-        gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.4, t+0.05); gain.gain.exponentialRampToValueAtTime(0.01, t+2);
-        osc.connect(gain); gain.connect(actx.destination); osc.start(t); osc.stop(t+2);
-    }
-    else if(type === 'heartbeat') {
-        playSfx('knock'); setTimeout(() => playSfx('knock'), 200);
-    }
-    else if(type === 'clock') {
-        const osc = actx.createOscillator(); const gain = actx.createGain();
-        osc.type = 'square'; osc.frequency.setValueAtTime(800, t);
-        gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.05);
-        osc.connect(gain); gain.connect(actx.destination); osc.start(t); osc.stop(t+0.05);
-    }
-}
-
-// ==========================================
-// 5. PLAYBACK CONTROL
-// ==========================================
-let playStartTime = 0;
-let audioSource = null;
-const timeline = document.getElementById('timeline');
-const timeText = document.getElementById('time-text');
-const btnPlay = document.getElementById('btn-play');
-
-function updateRender() {
-    renderAtTime(playTime);
-    timeline.value = playTime;
-    timeText.innerText = `${playTime.toFixed(1)} / ${totalDuration.toFixed(1)}`;
-}
-
-function loop() {
-    if(!isPlaying) return;
-    playTime = (actx.currentTime - playStartTime) % totalDuration;
-    updateRender();
-    if(playTime >= totalDuration - 0.1) stopPlayback();
-    else reqAnim = requestAnimationFrame(loop);
-}
-
-function startPlayback() {
-    if(actx.state === 'suspended') actx.resume();
-    isPlaying = true; btnPlay.innerText = '⏸';
-    playStartTime = actx.currentTime - playTime;
-    
-    if(isAudioLoaded && audioBuffer) {
-        if(audioSource) audioSource.disconnect();
-        audioSource = actx.createBufferSource();
-        audioSource.buffer = audioBuffer;
-        audioSource.connect(actx.destination);
-        audioSource.start(0, playTime);
-    }
-    lastSfxTime = playTime - 0.1;
-    loop();
-}
-
-function stopPlayback() {
-    isPlaying = false; btnPlay.innerText = '▶';
-    cancelAnimationFrame(reqAnim);
-    if(audioSource) { audioSource.stop(); audioSource.disconnect(); audioSource = null; }
-}
-
-btnPlay.onclick = () => { if(isPlaying) stopPlayback(); else startPlayback(); };
-timeline.oninput = (e) => {
-    playTime = parseFloat(e.target.value);
-    if(isPlaying) { stopPlayback(); startPlayback(); }
-    else { updateRender(); lastSfxTime = playTime; }
-};
-document.getElementById('btn-mute').onclick = (e) => {
-    let m = e.target.innerText === '🔊';
-    e.target.innerText = m ? '🔇' : '🔊';
-    // Simple mute logic (requires master gain node in real app, here we just stop sfx)
-};
-
-
-// ==========================================
-// 6. EXPORT ENGINE (MediaRecorder Fallback Focus for reliability)
-// ==========================================
-let isExporting = false;
-let exportRecorder = null;
-let exportChunks = [];
-
-document.getElementById('btn-export').onclick = async () => {
-    if(isExporting) return;
-    isExporting = true;
-    stopPlayback();
-    playTime = 0;
-    
-    document.getElementById('export-overlay').style.display = 'flex';
-    document.getElementById('export-progress').style.display = 'block';
-    document.getElementById('export-result').style.display = 'none';
-    document.getElementById('export-status').innerText = 'กำลังเรนเดอร์ภาพ...';
-    
-    // Lock Wake
-    let wakeLock = null;
-    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
-    
-    // Render loop for MediaRecorder (Realtime)
-    const stream = canvas.captureStream(30);
-    
-    // Add audio track if available
-    let dest = actx.createMediaStreamDestination();
-    if(audioBuffer) {
-        const src = actx.createBufferSource();
-        src.buffer = audioBuffer;
-        src.connect(dest);
-        src.start();
-        stream.addTrack(dest.stream.getAudioTracks()[0]);
-    }
-    
-    let mime = 'video/mp4';
-    if(!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp9';
-    if(!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
-    
-    exportRecorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 5000000 });
-    exportChunks = [];
-    exportRecorder.ondataavailable = e => exportChunks.push(e.data);
-    exportRecorder.onstop = () => {
-        const blob = new Blob(exportChunks, { type: mime });
-        const url = URL.createObjectURL(blob);
-        const vid = document.getElementById('final-video');
-        vid.src = url;
-        
-        document.getElementById('export-progress').style.display = 'none';
-        document.getElementById('export-result').style.display = 'flex';
-        
-        document.getElementById('btn-save-video').onclick = () => {
-            const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `horror_explainer.${ext}`;
-            a.click();
+    <script>
+        /* ============================================================================
+           1. STRUCTURED DATA FROM G (G1 BRIEF, G2 CHARACTERS, G3 NARRATION, G4 SCENES, G5 MUSIC)
+           ============================================================================ */
+        const G1 = {
+            project: "กฎ 5 ข้อในการอยู่หอพักข้างวัดป่า",
+            format: "vertical_9:16",
+            genre: "horror_explainer",
+            style_preset: "REF-NIGHT",
+            duration_seconds: 76.48,
+            duration_source: "verified",
+            language: "Thai",
+            visual_style: "2D horror cinematic animation",
+            color_palette: {
+                black: "#090B0D",
+                forest_green: "#17251D",
+                old_gray: "#464746",
+                dim_yellow: "#C5A45B",
+                warning_red: "#9D2026",
+                fog_gray: "#A4AAA5"
+            },
+            subtitle_color: "#9D2026",
+            subtitle_style: "red_pill",
+            graphics: ["title_card", "rule_counter", "warning_stamp", "ending_card"],
+            hud: { enabled: true },
+            lighting_direction: "Dim yellow practical lights from the dormitory, cool moonlight from the forest, realistic soft shadows, contact shadows, ambient occlusion and subtle bounce light. Preserve consistent lighting direction throughout all scenes.",
+            visual_rules: [
+                "Maintain the same dormitory architecture and forest layout across scenes.",
+                "Preserve character appearance, clothing, proportions and colors.",
+                "Do not add unrelated characters or props.",
+                "Keep the visual composition readable in vertical 9:16.",
+                "Use cinematic depth through existing foreground, midground and background elements.",
+                "Do not change the original narration."
+            ]
         };
-        
-        if(wakeLock) wakeLock.release();
-        isExporting = false;
-        playTime = 0;
-        updateRender();
-    };
-    
-    exportRecorder.start();
-    
-    // Drive rendering in real-time
-    const startTime = performance.now();
-    const renderTick = () => {
-        if(!isExporting) { exportRecorder.stop(); return; }
-        playTime = (performance.now() - startTime) / 1000;
-        if(playTime >= totalDuration) {
-            exportRecorder.stop();
-        } else {
-            renderAtTime(playTime);
-            document.getElementById('export-fill').style.width = `${(playTime/totalDuration)*100}%`;
-            document.getElementById('export-status').innerText = `กำลังบันทึกวิดีโอ... ${(playTime/totalDuration*100).toFixed(0)}%`;
-            requestAnimationFrame(renderTick);
+
+        const G2 = {
+            characters: [
+                {
+                    id: "C1",
+                    name: "ผู้เช่าคนใหม่",
+                    species: "human",
+                    age: 22,
+                    gender: "male",
+                    body: "slim_medium",
+                    hair: "short_black",
+                    description: "ชายไทยอายุประมาณ 22 ปี รูปร่างผอมปานกลาง ผมดำสั้น",
+                    clothing: {
+                        top: "#464746",
+                        bottom: "#090B0D",
+                        shoes: "#090B0D"
+                    },
+                    personality: "ขี้สงสัย ก่อนจะค่อย ๆ หวาดกลัว"
+                },
+                {
+                    id: "C2",
+                    name: "ป้าเจ้าของหอ",
+                    species: "human",
+                    age: 60,
+                    gender: "female",
+                    body: "elder_medium",
+                    hair: "salt_pepper_bun",
+                    description: "หญิงสูงอายุประมาณ 60 ปี ผมดำปนเท้ามัดรวบ ใบหน้าเรียบเฉย",
+                    clothing: {
+                        top: "#17251D",
+                        bottom: "#090B0D",
+                        shoes: "#090B0D"
+                    },
+                    personality: "พูดน้อย จริงจัง และมีท่าทีลึกลับ"
+                }
+            ]
+        };
+
+        const G3 = {
+            narration: `ถ้าคุณต้องไปเช่าหอพักราคาถูก... ที่อยู่ติดกับวัดป่าแห่งหนึ่ง
+
+อย่าเพิ่งดีใจ เพราะหอพักแห่งนี้มีกฎอยู่ 5 ข้อ และเจ้าของหอบอกว่า... ถ้าไม่อยากเจอเรื่องแปลก ๆ ต้องทำตามให้ครบ
+
+กฎข้อที่หนึ่ง หลังสามทุ่ม ห้ามเดินออกไปทางด้านหลังหอเด็ดขาด เพราะบางคืนคุณอาจเห็นพระเดินอยู่ในป่า... แต่ถ้ามองดี ๆ เท้าของท่านไม่ได้แตะพื้น
+
+กฎข้อที่สอง ถ้าได้ยินเสียงระฆังดังตอนตีสอง ห้ามเปิดหน้าต่างออกไปดู เพราะวัดแห่งนี้ไม่มีระฆังมานานหลายสิบปีแล้ว
+
+กฎข้อที่สาม ถ้ามีคนมาเคาะประตูสามครั้งตอนเที่ยงคืน ห้ามถามว่าใคร และห้ามเปิดประตูเด็ดขาด โดยเฉพาะถ้าเสียงข้างนอกเป็นเสียงของคุณเอง
+
+กฎข้อที่สี่ ถ้าเห็นคนยืนอยู่ใต้ต้นไม้ใหญ่ข้างกำแพงวัด อย่าจ้องตาเขา และอย่านับจำนวนคนที่ยืนอยู่ตรงนั้น... เพราะบางครั้งมันอาจเพิ่มขึ้นมาอีกหนึ่งคน
+
+และกฎข้อที่ห้า ถ้าตื่นขึ้นมากลางดึกแล้วเห็นประตูห้องน้ำเปิดอยู่ ทั้งที่คุณจำได้ว่าปิดมันไว้... ให้หลับตาแล้วนอนนิ่ง ๆ จนกว่าจะได้ยินเสียงนาฬิกาปลุก
+
+แต่มีสิ่งหนึ่งที่เจ้าของหอไม่ได้เขียนไว้ในกฎ...
+
+ห้องที่คุณเช่าอยู่ คือห้องเดียวกับผู้เช่าคนก่อนที่หายตัวไป
+
+และเมื่อคืนนี้... มีคนเพิ่งมาเคาะประตูห้องคุณสามครั้ง
+
+โปรดติดตามตอนต่อไป...`
+        };
+
+        const G5 = {
+            mood: "horror_suspense",
+            bpm: 68,
+            key: "D",
+            mode: "phrygian"
+        };
+
+        const G4 = {
+            scenes: [
+                {
+                    id: "S1",
+                    label: "เปิดเรื่อง • หอข้างวัดป่า",
+                    text: "ถ้าคุณต้องไปเช่าหอพักราคาถูก... ที่อยู่ติดกับวัดป่าแห่งหนึ่ง",
+                    highlightWords: ["หอพักราคาถูก", "วัดป่า"],
+                    bg: { preset: "street_night", variant: "dorm_exterior", blurBg: false },
+                    camera: { zoomFrom: 1.0, zoomTo: 1.06, panX: 0, panY: -10 },
+                    hud: { chip: "หอพักข้างวัดป่า • 20:45 น." },
+                    characters: [
+                        { id: "C1", x: 370, y: 1580, scale: 1.0, flip: false, pose: "idle", face: "neutral" }
+                    ],
+                    props: [
+                        { type: "bag", x: 265, y: 1565, scale: 0.9 }
+                    ],
+                    cards: [
+                        {
+                            type: "title_card",
+                            title: "กฎ 5 ข้อในการอยู่หอพักข้างวัดป่า",
+                            subtitle: "เรื่องเล่าสยองขวัญ • โปรดอ่านก่อนเข้าพัก",
+                            appearAtText: "หอพักราคาถูก"
+                        }
+                    ],
+                    sfx: [
+                        { name: "whoosh", atText: "หอพักราคาถูก" }
+                    ],
+                    ambient: ["forest", "night_insects"],
+                    transition: "fade",
+                    holdAfter: 0.15
+                },
+                {
+                    id: "S2",
+                    label: "คำเตือนจากเจ้าของหอ",
+                    text: "อย่าเพิ่งดีใจ เพราะหอพักแห่งนี้มีกฎอยู่ 5 ข้อ และเจ้าของหอบอกว่า... ถ้าไม่อยากเจอเรื่องแปลก ๆ ต้องทำตามให้ครบ",
+                    highlightWords: ["กฎอยู่ 5 ข้อ", "ต้องทำตามให้ครบ"],
+                    bg: { preset: "living_room_night", variant: "dorm_corridor", blurBg: true },
+                    camera: { zoomFrom: 1.04, zoomTo: 1.0, panX: 0, panY: 0 },
+                    hud: { chip: "ระเบียงชั้น 1 • กฎ 5 ข้อ" },
+                    characters: [
+                        { id: "C2", x: 340, y: 1585, scale: 1.02, flip: false, pose: "talk", face: "serious" },
+                        { id: "C1", x: 740, y: 1595, scale: 0.98, flip: true, pose: "idle", face: "neutral" }
+                    ],
+                    props: [
+                        { type: "paper_rules", x: 520, y: 1220, scale: 1.0 }
+                    ],
+                    cards: [
+                        {
+                            type: "list",
+                            title: "ใบข้อตกลงผู้เช่าหอพัก",
+                            items: [
+                                "ข้อ 1 : ห้ามออกหลังหอหลัง 21:00 น.",
+                                "ข้อ 2 : ห้ามเปิดหน้าต่างตอน 02:00 น.",
+                                "ข้อ 3 : ห้ามเปิดประตูเมื่อเคาะ 3 ครั้ง",
+                                "ข้อ 4 : ห้ามจ้องหรือนับคนใต้ต้นไม้",
+                                "ข้อ 5 : ประตูห้องน้ำเปิดให้หลับตา"
+                            ],
+                            appearAtText: "กฎอยู่ 5 ข้อ"
+                        },
+                        {
+                            type: "warning_stamp",
+                            text: "ห้ามฝ่าฝืนเด็ดขาด",
+                            appearAtText: "ต้องทำตามให้ครบ"
+                        }
+                    ],
+                    sfx: [
+                        { name: "paper", atText: "กฎอยู่ 5 ข้อ" },
+                        { name: "stamp", atText: "ต้องทำตามให้ครบ" }
+                    ],
+                    ambient: ["room", "night_insects"],
+                    transition: "slide_left",
+                    holdAfter: 0.2
+                },
+                {
+                    id: "S3",
+                    label: "กฎข้อที่ 1 • หลังสามทุ่ม",
+                    text: "กฎข้อที่หนึ่ง หลังสามทุ่ม ห้ามเดินออกไปทางด้านหลังหอเด็ดขาด เพราะบางคืนคุณอาจเห็นพระเดินอยู่ในป่า... แต่ถ้ามองดี ๆ เท้าของท่านไม่ได้แตะพื้น",
+                    highlightWords: ["กฎข้อที่หนึ่ง", "หลังสามทุ่ม", "เท้าของท่านไม่ได้แตะพื้น"],
+                    bg: { preset: "forest", variant: "dorm_back_forest", blurBg: false },
+                    camera: { zoomFrom: 1.0, zoomTo: 1.12, panX: -20, panY: 25 },
+                    hud: { chip: "เวลา 21:15 น. • ด้านหลังหอ" },
+                    characters: [
+                        { id: "C1", x: 240, y: 1600, scale: 0.95, flip: false, pose: "scared", face: "scared" }
+                    ],
+                    props: [
+                        { type: "monk_silhouette", x: 750, y: 1380, scale: 1.0, highlightFeetAtText: "เท้าของท่านไม่ได้แตะพื้น" }
+                    ],
+                    cards: [
+                        {
+                            type: "rule_counter",
+                            ruleNum: "กฎข้อที่ 1 / 5",
+                            ruleTitle: "หลัง 21:00 น. ห้ามออกด้านหลังหอ",
+                            appearAtText: "กฎข้อที่หนึ่ง"
+                        },
+                        {
+                            type: "warning_stamp",
+                            text: "เท้าลอยเหนือพื้น",
+                            appearAtText: "เท้าของท่านไม่ได้แตะพื้น"
+                        }
+                    ],
+                    sfx: [
+                        { name: "wind", atText: "หลังสามทุ่ม" },
+                        { name: "boom", atText: "เท้าของท่านไม่ได้แตะพื้น" }
+                    ],
+                    ambient: ["forest", "wind"],
+                    transition: "fade",
+                    holdAfter: 0.2
+                },
+                {
+                    id: "S4",
+                    label: "กฎข้อที่ 2 • ระฆังตีสอง",
+                    text: "กฎข้อที่สอง ถ้าได้ยินเสียงระฆังดังตอนตีสอง ห้ามเปิดหน้าต่างออกไปดู เพราะวัดแห่งนี้ไม่มีระฆังมานานหลายสิบปีแล้ว",
+                    highlightWords: ["กฎข้อที่สอง", "ตอนตีสอง", "ไม่มีระฆังมานานหลายสิบปีแล้ว"],
+                    bg: { preset: "room", variant: "dorm_window_night", blurBg: false },
+                    camera: { zoomFrom: 1.02, zoomTo: 1.08, panX: 15, panY: -10 },
+                    hud: { chip: "เวลา 02:00 น. • เสียงระฆัง" },
+                    characters: [
+                        { id: "C1", x: 350, y: 1610, scale: 1.02, flip: false, pose: "scared", face: "scared" }
+                    ],
+                    props: [
+                        { type: "bell_wave", x: 760, y: 690, scale: 1.0, atText: "เสียงระฆังดังตอนตีสอง" }
+                    ],
+                    cards: [
+                        {
+                            type: "rule_counter",
+                            ruleNum: "กฎข้อที่ 2 / 5",
+                            ruleTitle: "02:00 น. ห้ามเปิดหน้าต่าง",
+                            appearAtText: "กฎข้อที่สอง"
+                        },
+                        {
+                            type: "phone_mockup",
+                            screen: "lock",
+                            timeText: "02:00",
+                            dateText: "ห้ามเปิดหน้าต่างเด็ดขาด",
+                            appearAtText: "ตอนตีสอง"
+                        },
+                        {
+                            type: "warning_stamp",
+                            text: "วัดนี้ไม่มีระฆัง",
+                            appearAtText: "ไม่มีระฆังมานานหลายสิบปีแล้ว"
+                        }
+                    ],
+                    sfx: [
+                        { name: "ding", atText: "เสียงระฆังดังตอนตีสอง" },
+                        { name: "heartbeat", atText: "ห้ามเปิดหน้าต่างออกไปดู" }
+                    ],
+                    ambient: ["room", "wind"],
+                    transition: "fade",
+                    holdAfter: 0.2
+                },
+                {
+                    id: "S5",
+                    label: "กฎข้อที่ 3 • เคาะประตูสามครั้ง",
+                    text: "กฎข้อที่สาม ถ้ามีคนมาเคาะประตูสามครั้งตอนเที่ยงคืน ห้ามถามว่าใคร และห้ามเปิดประตูเด็ดขาด โดยเฉพาะถ้าเสียงข้างนอกเป็นเสียงของคุณเอง",
+                    highlightWords: ["กฎข้อที่สาม", "เคาะประตูสามครั้ง", "เสียงของคุณเอง"],
+                    bg: { preset: "room", variant: "dorm_door_midnight", blurBg: false },
+                    camera: { zoomFrom: 1.0, zoomTo: 1.1, panX: 0, panY: -15 },
+                    hud: { chip: "เวลา 00:00 น. • หน้าประตูห้อง" },
+                    characters: [
+                        { id: "C1", x: 280, y: 1610, scale: 1.02, flip: false, pose: "scared", face: "scared" }
+                    ],
+                    props: [
+                        { type: "door_knock", x: 710, y: 1120, scale: 1.0, atText: "เคาะประตูสามครั้ง" }
+                    ],
+                    cards: [
+                        {
+                            type: "rule_counter",
+                            ruleNum: "กฎข้อที่ 3 / 5",
+                            ruleTitle: "00:00 น. ห้ามขานรับและห้ามเปิดประตู",
+                            appearAtText: "กฎข้อที่สาม"
+                        },
+                        {
+                            type: "checklist",
+                            title: "เมื่อได้ยินเสียงเคาะ 3 ครั้ง",
+                            rows: [
+                                { status: "warn", text: "ห้ามถามว่า 'ใคร'" },
+                                { status: "warn", text: "ห้ามเปิดประตูเด็ดขาด" },
+                                { status: "warn", text: "ระวังเสียงที่เหมือนตัวคุณเอง" }
+                            ],
+                            appearAtText: "ห้ามถามว่าใคร"
+                        }
+                    ],
+                    sfx: [
+                        { name: "door", atText: "เคาะประตูสามครั้ง" },
+                        { name: "glitch", atText: "เสียงของคุณเอง" }
+                    ],
+                    ambient: ["room"],
+                    transition: "cut",
+                    holdAfter: 0.2
+                },
+                {
+                    id: "S6",
+                    label: "กฎข้อที่ 4 • ใต้ต้นไม้ใหญ่",
+                    text: "กฎข้อที่สี่ ถ้าเห็นคนยืนอยู่ใต้ต้นไม้ใหญ่ข้างกำแพงวัด อย่าจ้องตาเขา และอย่านับจำนวนคนที่ยืนอยู่ตรงนั้น... เพราะบางครั้งมันอาจเพิ่มขึ้นมาอีกหนึ่งคน",
+                    highlightWords: ["กฎข้อที่สี่", "อย่าจ้องตาเขา", "เพิ่มขึ้นมาอีกหนึ่งคน"],
+                    bg: { preset: "dark_fog", variant: "temple_wall_tree", blurBg: false },
+                    camera: { zoomFrom: 1.0, zoomTo: 1.09, panX: 10, panY: 0 },
+                    hud: { chip: "กำแพงวัดป่า • ใต้ต้นไม้ใหญ่" },
+                    characters: [],
+                    props: [
+                        { type: "tree_figures", x: 560, y: 1350, scale: 1.0, extraAtText: "เพิ่มขึ้นมาอีกหนึ่งคน" }
+                    ],
+                    cards: [
+                        {
+                            type: "rule_counter",
+                            ruleNum: "กฎข้อที่ 4 / 5",
+                            ruleTitle: "ห้ามจ้องตา • ห้ามนับจำนวนคน",
+                            appearAtText: "กฎข้อที่สี่"
+                        },
+                        {
+                            type: "warning_stamp",
+                            text: "+1 เงาปริศนา",
+                            appearAtText: "เพิ่มขึ้นมาอีกหนึ่งคน"
+                        }
+                    ],
+                    sfx: [
+                        { name: "wind", atText: "ต้นไม้ใหญ่ข้างกำแพงวัด" },
+                        { name: "boom", atText: "เพิ่มขึ้นมาอีกหนึ่งคน" }
+                    ],
+                    ambient: ["forest", "night_insects"],
+                    transition: "fade",
+                    holdAfter: 0.2
+                },
+                {
+                    id: "S7",
+                    label: "กฎข้อที่ 5 • ประตูห้องน้ำ",
+                    text: "และกฎข้อที่ห้า ถ้าตื่นขึ้นมากลางดึกแล้วเห็นประตูห้องน้ำเปิดอยู่ ทั้งที่คุณจำได้ว่าปิดมันไว้... ให้หลับตาแล้วนอนนิ่ง ๆ จนกว่าจะได้ยินเสียงนาฬิกาปลุก",
+                    highlightWords: ["กฎข้อที่ห้า", "ประตูห้องน้ำเปิดอยู่", "หลับตาแล้วนอนนิ่ง ๆ"],
+                    bg: { preset: "room", variant: "bedroom_bathroom_ajar", blurBg: false },
+                    camera: { zoomFrom: 1.05, zoomTo: 1.0, panX: -12, panY: 10 },
+                    hud: { chip: "กลางดึก • ภายในห้องพัก" },
+                    characters: [
+                        { id: "C1", x: 340, y: 1590, scale: 1.0, flip: false, pose: "sleep", face: "sleep" }
+                    ],
+                    props: [
+                        { type: "bathroom_ajar", x: 760, y: 1120, scale: 1.0 }
+                    ],
+                    cards: [
+                        {
+                            type: "rule_counter",
+                            ruleNum: "กฎข้อที่ 5 / 5",
+                            ruleTitle: "หลับตาและนอนนิ่ง ๆ จนเช้า",
+                            appearAtText: "กฎข้อที่ห้า"
+                        },
+                        {
+                            type: "phone_mockup",
+                            screen: "app",
+                            titleText: "นาฬิกาปลุก",
+                            bodyLines: ["06:00 น. — ปลอดภัยแล้ว"],
+                            appearAtText: "เสียงนาฬิกาปลุก"
+                        }
+                    ],
+                    sfx: [
+                        { name: "door", atText: "ประตูห้องน้ำเปิดอยู่" },
+                        { name: "heartbeat", atText: "หลับตาแล้วนอนนิ่ง ๆ" },
+                        { name: "alarm", atText: "เสียงนาฬิกาปลุก" }
+                    ],
+                    ambient: ["room"],
+                    transition: "fade",
+                    holdAfter: 0.2
+                },
+                {
+                    id: "S8",
+                    label: "ความจริงที่ซ่อนอยู่",
+                    text: "แต่มีสิ่งหนึ่งที่เจ้าของหอไม่ได้เขียนไว้ในกฎ...\nห้องที่คุณเช่าอยู่ คือห้องเดียวกับผู้เช่าคนก่อนที่หายตัวไป\nและเมื่อคืนนี้... มีคนเพิ่งมาเคาะประตูห้องคุณสามครั้ง",
+                    highlightWords: ["ไม่ได้เขียนไว้ในกฎ", "ผู้เช่าคนก่อนที่หายตัวไป", "เคาะประตูห้องคุณสามครั้ง"],
+                    bg: { preset: "room", variant: "dorm_door_midnight", blurBg: true },
+                    camera: { zoomFrom: 1.0, zoomTo: 1.15, panX: 0, panY: -20 },
+                    hud: { chip: "ความจริง • ห้องหมายเลขเดิม" },
+                    characters: [
+                        { id: "C1", x: 540, y: 1620, scale: 1.08, flip: false, pose: "scared", face: "scared" }
+                    ],
+                    props: [
+                        { type: "door_knock", x: 540, y: 1120, scale: 1.08, atText: "เคาะประตูห้องคุณสามครั้ง" }
+                    ],
+                    cards: [
+                        {
+                            type: "warning_stamp",
+                            text: "ผู้เช่าคนก่อนหายตัวไป",
+                            appearAtText: "ผู้เช่าคนก่อนที่หายตัวไป"
+                        }
+                    ],
+                    sfx: [
+                        { name: "heartbeat", atText: "ไม่ได้เขียนไว้ในกฎ" },
+                        { name: "door", atText: "เคาะประตูห้องคุณสามครั้ง" },
+                        { name: "boom", atText: "สามครั้ง" }
+                    ],
+                    ambient: ["room", "wind"],
+                    transition: "flash",
+                    holdAfter: 0.3
+                },
+                {
+                    id: "S9",
+                    label: "ตอนต่อไป",
+                    text: "โปรดติดตามตอนต่อไป...",
+                    highlightWords: ["โปรดติดตามตอนต่อไป"],
+                    bg: { preset: "dark_fog", variant: "ending_void", blurBg: true },
+                    camera: { zoomFrom: 1.05, zoomTo: 1.0, panX: 0, panY: 0 },
+                    hud: { chip: "จบตอนที่ 1" },
+                    characters: [],
+                    props: [],
+                    cards: [
+                        {
+                            type: "ending_card",
+                            badge: "จบตอนที่ 1",
+                            headline: "โปรดติดตามตอนต่อไป...",
+                            subline: "กฎ 5 ข้อในการอยู่หอพักข้างวัดป่า",
+                            cta: "กดติดตามเพื่อฟังเรื่องราวคืนถัดไป",
+                            appearAtText: "โปรดติดตามตอนต่อไป"
+                        }
+                    ],
+                    sfx: [
+                        { name: "boom", atText: "โปรดติดตามตอนต่อไป" }
+                    ],
+                    ambient: ["wind"],
+                    transition: "fade",
+                    holdAfter: 2.8
+                }
+            ]
+        };
+
+        /* ============================================================================
+           2. SEEDED PRNG & UTILITIES
+           ============================================================================ */
+        function mulberry32(seed) {
+            let a = seed >>> 0;
+            return function () {
+                a |= 0;
+                a = (a + 0x6D2B79F5) | 0;
+                let t = Math.imul(a ^ (a >>> 15), 1 | a);
+                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
         }
-    };
-    renderTick();
-};
 
-document.getElementById('btn-cancel-export').onclick = () => {
-    isExporting = false; // Will trigger stop in renderTick
-};
+        function clamp(v, min, max) {
+            return v < min ? min : v > max ? max : v;
+        }
 
-</script>
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function easeOutCubic(t) {
+            t = clamp(t, 0, 1);
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function easeInOutCubic(t) {
+            t = clamp(t, 0, 1);
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        function easeOutBack(t) {
+            t = clamp(t, 0, 1);
+            const c1 = 1.70158;
+            const c3 = c1 + 1;
+            return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+        }
+
+        function shadeHex(hex, percent) {
+            const num = parseInt(hex.replace("#", ""), 16);
+            const r = clamp(((num >> 16) & 255) + Math.round(255 * percent), 0, 255);
+            const g = clamp(((num >> 8) & 255) + Math.round(255 * percent), 0, 255);
+            const b = clamp((num & 255) + Math.round(255 * percent), 0, 255);
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        function hexToRgba(hex, alpha) {
+            const num = parseInt(hex.replace("#", ""), 16);
+            const r = (num >> 16) & 255;
+            const g = (num >> 8) & 255;
+            const b = num & 255;
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        /* ============================================================================
+           3. THAI SEGMENTATION & SYNC ENGINE (RMS + CHARACTER WEIGHTS + SNAP)
+           ============================================================================ */
+        const thaiSegmenter = (typeof Intl !== "undefined" && Intl.Segmenter)
+            ? new Intl.Segmenter("th", { granularity: "word" })
+            : null;
+
+        function segmentThaiWords(text) {
+            if (!thaiSegmenter) return text.split(/(\s+)/);
+            const out = [];
+            for (const seg of thaiSegmenter.segment(text)) out.push(seg.segment);
+            return out;
+        }
+
+        function computeTextWeight(str) {
+            let w = 0;
+            for (let i = 0; i < str.length; i++) {
+                const ch = str[i];
+                if (ch === "\n" || ch === "." || ch === "…") w += 6;
+                else if (ch === "," || ch === " ") w += 3;
+                else w += 1;
+            }
+            return Math.max(1, w);
+        }
+
+        function splitNarrationIntoChunks(text) {
+            const rawParts = text
+                .replace(/\.\.\./g, "…")
+                .split(/(\n+|…+|(?<=\s)เพราะ|(?<=\s)แต่ถ้า|(?<=\s)และห้าม|(?<=\s)โดยเฉพาะ|(?<=\s)ทั้งที่คุณ|(?<=\s)ให้หลับตา|(?<=\s)คือห้อง|(?<=\s)มีคนเพิ่ง)/)
+                .filter(s => s && s.trim().length > 0);
+
+            const merged = [];
+            for (const part of rawParts) {
+                const clean = part.replace(/\n+/g, " ").trim();
+                if (!clean) continue;
+                if (merged.length > 0 && clean.length < 14) {
+                    merged[merged.length - 1] += " " + clean;
+                } else {
+                    merged.push(clean);
+                }
+            }
+            return merged.length ? merged : [text.trim()];
+        }
+
+        const syncState = {
+            isAudioLoaded: false,
+            audioBuffer: null,
+            audioDuration: G1.duration_seconds,
+            rmsEnvelope: null,
+            rmsStepSec: 0.02,
+            speechStart: 0,
+            speechEnd: G1.duration_seconds,
+            pauses: [],
+            sceneTimings: [],
+            totalDuration: G1.duration_seconds
+        };
+
+        function analyzeAudioRMS(audioBuffer) {
+            const sr = audioBuffer.sampleRate;
+            const stepSamples = Math.max(1, Math.floor(sr * 0.02));
+            const len = audioBuffer.length;
+            const numFrames = Math.ceil(len / stepSamples);
+            const ch0 = audioBuffer.getChannelData(0);
+            const ch1 = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : null;
+
+            const rms = new Float32Array(numFrames);
+            const sorted = [];
+
+            for (let i = 0; i < numFrames; i++) {
+                const s0 = i * stepSamples;
+                const s1 = Math.min(len, s0 + stepSamples);
+                let sumSq = 0;
+                for (let j = s0; j < s1; j++) {
+                    const v = ch1 ? 0.5 * (ch0[j] + ch1[j]) : ch0[j];
+                    sumSq += v * v;
+                }
+                const val = Math.sqrt(sumSq / Math.max(1, s1 - s0));
+                rms[i] = val;
+                sorted.push(val);
+            }
+
+            sorted.sort((a, b) => a - b);
+            const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0.1;
+            const threshold = Math.max(0.004, p95 * 0.08);
+
+            let firstActive = 0;
+            while (firstActive < numFrames && rms[firstActive] < threshold) firstActive++;
+            let lastActive = numFrames - 1;
+            while (lastActive > firstActive && rms[lastActive] < threshold) lastActive--;
+
+            const speechStart = firstActive * 0.02;
+            const speechEnd = Math.min(audioBuffer.duration, (lastActive + 1) * 0.02);
+
+            const pauses = [];
+            let silStart = -1;
+            for (let i = firstActive; i <= lastActive; i++) {
+                if (rms[i] < threshold) {
+                    if (silStart < 0) silStart = i;
+                } else if (silStart >= 0) {
+                    const dur = (i - silStart) * 0.02;
+                    if (dur >= 0.22) {
+                        const st = silStart * 0.02;
+                        const en = i * 0.02;
+                        pauses.push({ start: st, end: en, mid: 0.5 * (st + en), duration: dur });
+                    }
+                    silStart = -1;
+                }
+            }
+
+            syncState.rmsEnvelope = rms;
+            syncState.speechStart = speechStart;
+            syncState.speechEnd = Math.max(speechStart + 1, speechEnd);
+            syncState.pauses = pauses;
+        }
+
+        function snapToPause(targetTime, windowSec) {
+            if (!syncState.isAudioLoaded || !syncState.pauses.length) return targetTime;
+            let best = null;
+            let bestScore = -1;
+            for (const p of syncState.pauses) {
+                const dist = Math.abs(p.mid - targetTime);
+                if (dist <= windowSec) {
+                    const score = p.duration * 2.0 - dist * 0.6;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        best = p.mid;
+                    }
+                }
+            }
+            return best !== null ? best : targetTime;
+        }
+
+        function getEnvelopeAt(t) {
+            if (syncState.isAudioLoaded && syncState.rmsEnvelope) {
+                const idx = Math.floor(t / syncState.rmsStepSec);
+                if (idx >= 0 && idx < syncState.rmsEnvelope.length) {
+                    return clamp(syncState.rmsEnvelope[idx] * 4.5, 0, 1);
+                }
+                return 0;
+            }
+            const s = getSceneAtTime(t);
+            if (!s || t > s.speakEnd) return 0;
+            const wave = Math.sin(t * 17.3) * 0.45 + Math.sin(t * 29.1) * 0.35 + 0.35;
+            return clamp(wave, 0, 1);
+        }
+
+        function buildSyncTimeline(existingNudges = {}) {
+            const scenes = G4.scenes;
+            const weights = scenes.map(sc => computeTextWeight(sc.text));
+            const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+            let activeStart = 0.25;
+            let activeSpan = G1.duration_seconds - 3.2;
+
+            if (syncState.isAudioLoaded) {
+                activeStart = syncState.speechStart;
+                activeSpan = Math.max(4, syncState.speechEnd - syncState.speechStart);
+            }
+
+            const rawBounds = [activeStart];
+            let acc = 0;
+            for (let i = 0; i < scenes.length - 1; i++) {
+                acc += weights[i];
+                const est = activeStart + (acc / totalWeight) * activeSpan;
+                const snapped = snapToPause(est, 1.2);
+                rawBounds.push(Math.max(rawBounds[rawBounds.length - 1] + 0.8, snapped));
+            }
+            rawBounds.push(activeStart + activeSpan);
+
+            const built = [];
+            let cursor = 0;
+
+            for (let i = 0; i < scenes.length; i++) {
+                const sc = scenes[i];
+                const nudge = existingNudges[sc.id] || 0;
+                const baseStart = i === 0 ? 0 : Math.max(cursor + 0.1, rawBounds[i] + nudge);
+                const speakEnd = Math.max(baseStart + 0.8, rawBounds[i + 1] + (i < scenes.length - 1 ? nudge : 0));
+                const hold = sc.holdAfter || 0.15;
+                const end = i === scenes.length - 1
+                    ? Math.max(speakEnd + Math.max(2.5, hold), syncState.isAudioLoaded ? syncState.audioDuration + 2.5 : G1.duration_seconds)
+                    : speakEnd + hold;
+
+                const rawChunks = splitNarrationIntoChunks(sc.text);
+                const chunkWeights = rawChunks.map(c => computeTextWeight(c));
+                const totalCW = chunkWeights.reduce((a, b) => a + b, 0);
+                const speakDur = Math.max(0.5, speakEnd - baseStart);
+                const chunks = [];
+                let cAcc = 0;
+                for (let k = 0; k < rawChunks.length; k++) {
+                    const cStart = baseStart + (cAcc / totalCW) * speakDur;
+                    cAcc += chunkWeights[k];
+                    const cEnd = k === rawChunks.length - 1 ? end : baseStart + (cAcc / totalCW) * speakDur;
+                    chunks.push({ text: rawChunks[k], start: cStart, end: cEnd });
+                }
+
+                const resolveTextTime = (needle) => {
+                    if (!needle) return baseStart + 0.15;
+                    const idx = sc.text.indexOf(needle);
+                    if (idx < 0) return baseStart + 0.2;
+                    const ratio = idx / Math.max(1, sc.text.length);
+                    const est = baseStart + ratio * speakDur;
+                    return clamp(snapToPause(est, 0.4), baseStart, end - 0.1);
+                };
+
+                built.push({
+                    ...sc,
+                    start: baseStart,
+                    speakEnd,
+                    end,
+                    nudge,
+                    chunks,
+                    resolvedCards: (sc.cards || []).map(c => ({ ...c, startTime: resolveTextTime(c.appearAtText) })),
+                    resolvedSfx: (sc.sfx || []).map(fx => ({ ...fx, triggerTime: resolveTextTime(fx.atText) })),
+                    resolvedProps: (sc.props || []).map(p => ({
+                        ...p,
+                        triggerTime: resolveTextTime(p.atText || p.highlightFeetAtText || p.extraAtText)
+                    }))
+                });
+
+                cursor = end;
+            }
+
+            syncState.sceneTimings = built;
+            syncState.totalDuration = built[built.length - 1].end;
+        }
+
+        function getSceneAtTime(t) {
+            const list = syncState.sceneTimings;
+            for (let i = 0; i < list.length; i++) {
+                if (t >= list[i].start && t < list[i].end) return list[i];
+            }
+            return list[list.length - 1];
+        }
+
+        /* ============================================================================
+           4. OFFSCREEN BACKGROUND CACHE & PROCEDURAL ART ENGINE (1080x1920)
+           ============================================================================ */
+        const W = 1080;
+        const H = 1920;
+        const PAL = G1.color_palette;
+        const bgCache = new Map();
+        let grainPatternCanvas = null;
+
+        function getFilmGrainCanvas() {
+            if (grainPatternCanvas) return grainPatternCanvas;
+            const c = document.createElement("canvas");
+            c.width = 256;
+            c.height = 256;
+            const g = c.getContext("2d");
+            const img = g.createImageData(256, 256);
+            const rng = mulberry32(20261113);
+            for (let i = 0; i < img.data.length; i += 4) {
+                const v = Math.floor(rng() * 255);
+                img.data[i] = v;
+                img.data[i + 1] = v;
+                img.data[i + 2] = v;
+                img.data[i + 3] = 16;
+            }
+            g.putImageData(img, 0, 0);
+            grainPatternCanvas = c;
+            return c;
+        }
+
+        function drawMoonAndFogSky(ctx, rng, topCol, botCol, moonX, moonY) {
+            const grad = ctx.createLinearGradient(0, 0, 0, H);
+            grad.addColorStop(0, topCol);
+            grad.addColorStop(0.55, botCol);
+            grad.addColorStop(1, PAL.black);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = hexToRgba(PAL.fog_gray, 0.38);
+            for (let i = 0; i < 48; i++) {
+                ctx.beginPath();
+                ctx.arc(rng() * W, rng() * (H * 0.42), 1 + rng() * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            const halo = ctx.createRadialGradient(moonX, moonY, 18, moonX, moonY, 340);
+            halo.addColorStop(0, hexToRgba(PAL.fog_gray, 0.35));
+            halo.addColorStop(0.5, hexToRgba(PAL.fog_gray, 0.1));
+            halo.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = halo;
+            ctx.fillRect(0, 0, W, H * 0.65);
+
+            ctx.fillStyle = shadeHex(PAL.fog_gray, 0.25);
+            ctx.beginPath();
+            ctx.arc(moonX, moonY, 54, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawForestTreeLayer(ctx, rng, baseY, count, color, minH, maxH) {
+            ctx.fillStyle = color;
+            for (let i = 0; i < count; i++) {
+                const tx = (i / Math.max(1, count - 1)) * W + (rng() - 0.5) * 90;
+                const th = minH + rng() * (maxH - minH);
+                const tw = 22 + rng() * 24;
+                ctx.fillRect(tx - tw * 0.5, baseY - th, tw, th + 120);
+                for (let k = 0; k < 4; k++) {
+                    const cy = baseY - th + k * (th * 0.16);
+                    const cw = 95 + k * 34 + rng() * 35;
+                    ctx.beginPath();
+                    ctx.moveTo(tx, cy - 90);
+                    ctx.lineTo(tx - cw, cy + 70);
+                    ctx.lineTo(tx + cw, cy + 70);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawDormBuildingFacade(ctx, x, y, w, h, litWindows = [true, false, true]) {
+            ctx.fillStyle = shadeHex(PAL.old_gray, -0.18);
+            ctx.fillRect(x, y, w, h);
+
+            ctx.fillStyle = hexToRgba(PAL.black, 0.28);
+            ctx.fillRect(x, y, w, 24);
+            ctx.fillRect(x, y + h * 0.5, w, 18);
+
+            ctx.fillStyle = PAL.black;
+            ctx.beginPath();
+            ctx.moveTo(x - 28, y + 8);
+            ctx.lineTo(x + w * 0.5, y - 95);
+            ctx.lineTo(x + w + 28, y + 8);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = PAL.black;
+            ctx.lineWidth = 6;
+            ctx.strokeRect(x + 16, y + h * 0.42, w - 32, 65);
+            for (let rx = x + 36; rx < x + w - 30; rx += 32) {
+                ctx.beginPath();
+                ctx.moveTo(rx, y + h * 0.42);
+                ctx.lineTo(rx, y + h * 0.42 + 65);
+                ctx.stroke();
+            }
+
+            const cols = litWindows.length;
+            const winW = 92;
+            const winH = 128;
+            const gap = (w - cols * winW) / (cols + 1);
+            for (let row = 0; row < 2; row++) {
+                const wy = y + 75 + row * (h * 0.46);
+                for (let c = 0; c < cols; c++) {
+                    const wx = x + gap + c * (winW + gap);
+                    const isLit = litWindows[(c + row) % litWindows.length];
+                    ctx.fillStyle = isLit ? PAL.dim_yellow : PAL.black;
+                    ctx.fillRect(wx, wy, winW, winH);
+                    if (isLit) {
+                        const glow = ctx.createRadialGradient(wx + winW / 2, wy + winH / 2, 10, wx + winW / 2, wy + winH / 2, 160);
+                        glow.addColorStop(0, hexToRgba(PAL.dim_yellow, 0.32));
+                        glow.addColorStop(1, "rgba(0,0,0,0)");
+                        ctx.fillStyle = glow;
+                        ctx.fillRect(wx - 110, wy - 110, winW + 220, winH + 220);
+                    }
+                    ctx.strokeStyle = PAL.black;
+                    ctx.lineWidth = 5;
+                    ctx.strokeRect(wx, wy, winW, winH);
+                }
+            }
+        }
+
+        function renderStaticBackground(preset, variant) {
+            const key = `${preset}::${variant || "default"}`;
+            if (bgCache.has(key)) return bgCache.get(key);
+
+            const c = document.createElement("canvas");
+            c.width = W;
+            c.height = H;
+            const ctx = c.getContext("2d");
+            const rng = mulberry32(key.split("").reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7));
+
+            if (variant === "dorm_exterior" || preset === "street_night") {
+                drawMoonAndFogSky(ctx, rng, PAL.black, PAL.forest_green, 820, 290);
+                drawForestTreeLayer(ctx, rng, 1460, 9, shadeHex(PAL.forest_green, -0.05), 520, 820);
+                ctx.fillStyle = PAL.old_gray;
+                ctx.fillRect(580, 1180, 500, 320);
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.2);
+                ctx.fillRect(580, 1165, 500, 26);
+                drawDormBuildingFacade(ctx, 40, 560, 560, 940, [true, false, true]);
+                ctx.fillStyle = shadeHex(PAL.black, 0.04);
+                ctx.fillRect(0, 1490, W, 430);
+                const porchGlow = ctx.createRadialGradient(320, 1340, 20, 320, 1460, 380);
+                porchGlow.addColorStop(0, hexToRgba(PAL.dim_yellow, 0.42));
+                porchGlow.addColorStop(1, "rgba(0,0,0,0)");
+                ctx.fillStyle = porchGlow;
+                ctx.fillRect(0, 1100, W, 820);
+            } else if (variant === "dorm_corridor" || preset === "living_room_night") {
+                const wallGrad = ctx.createLinearGradient(0, 0, 0, H);
+                wallGrad.addColorStop(0, shadeHex(PAL.old_gray, -0.22));
+                wallGrad.addColorStop(0.65, shadeHex(PAL.forest_green, -0.04));
+                wallGrad.addColorStop(1, PAL.black);
+                ctx.fillStyle = wallGrad;
+                ctx.fillRect(0, 0, W, H);
+
+                ctx.strokeStyle = PAL.black;
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.moveTo(540, 0);
+                ctx.lineTo(540, 230);
+                ctx.stroke();
+
+                const bulbGlow = ctx.createRadialGradient(540, 250, 16, 540, 420, 760);
+                bulbGlow.addColorStop(0, hexToRgba(PAL.dim_yellow, 0.52));
+                bulbGlow.addColorStop(0.55, hexToRgba(PAL.dim_yellow, 0.14));
+                bulbGlow.addColorStop(1, "rgba(0,0,0,0)");
+                ctx.fillStyle = bulbGlow;
+                ctx.fillRect(0, 0, W, H);
+
+                ctx.fillStyle = PAL.dim_yellow;
+                ctx.beginPath();
+                ctx.arc(540, 245, 22, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.28);
+                ctx.fillRect(0, 1470, W, 450);
+            } else if (variant === "dorm_back_forest" || preset === "forest") {
+                drawMoonAndFogSky(ctx, rng, PAL.black, PAL.forest_green, 780, 260);
+                drawForestTreeLayer(ctx, rng, 1520, 11, shadeHex(PAL.forest_green, -0.08), 640, 980);
+                drawForestTreeLayer(ctx, rng, 1580, 7, PAL.black, 700, 1080);
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.2);
+                ctx.fillRect(0, 420, 230, 1180);
+                ctx.fillStyle = PAL.dim_yellow;
+                ctx.fillRect(40, 620, 90, 140);
+                ctx.fillStyle = shadeHex(PAL.forest_green, -0.14);
+                ctx.fillRect(0, 1490, W, 430);
+            } else if (variant === "dorm_window_night") {
+                ctx.fillStyle = shadeHex(PAL.black, 0.03);
+                ctx.fillRect(0, 0, W, H);
+                const wx = 440, wy = 360, ww = 520, wh = 680;
+                ctx.fillStyle = PAL.forest_green;
+                ctx.fillRect(wx, wy, ww, wh);
+                ctx.fillStyle = hexToRgba(PAL.fog_gray, 0.75);
+                ctx.beginPath();
+                ctx.arc(wx + 370, wy + 150, 46, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = PAL.black;
+                ctx.fillRect(wx + 90, wy + 220, 34, 460);
+                ctx.beginPath();
+                ctx.arc(wx + 110, wy + 240, 130, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = hexToRgba(PAL.fog_gray, 0.08);
+                ctx.beginPath();
+                ctx.moveTo(wx, wy + wh);
+                ctx.lineTo(wx + ww, wy + wh);
+                ctx.lineTo(W, H);
+                ctx.lineTo(180, H);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = shadeHex(PAL.old_gray, -0.25);
+                ctx.lineWidth = 16;
+                ctx.strokeRect(wx, wy, ww, wh);
+                ctx.beginPath();
+                ctx.moveTo(wx + ww / 2, wy);
+                ctx.lineTo(wx + ww / 2, wy + wh);
+                ctx.moveTo(wx, wy + wh / 2);
+                ctx.lineTo(wx + ww, wy + wh / 2);
+                ctx.stroke();
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.32);
+                ctx.fillRect(0, 1500, W, 420);
+            } else if (variant === "dorm_door_midnight" || variant === "bedroom_bathroom_ajar" || preset === "room") {
+                ctx.fillStyle = shadeHex(PAL.black, 0.03);
+                ctx.fillRect(0, 0, W, H);
+                ctx.strokeStyle = hexToRgba(PAL.old_gray, 0.25);
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(180, 0);
+                ctx.lineTo(180, 1500);
+                ctx.lineTo(0, 1680);
+                ctx.moveTo(180, 1500);
+                ctx.lineTo(W, 1500);
+                ctx.stroke();
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.34);
+                ctx.fillRect(0, 1500, W, 420);
+                if (variant === "bedroom_bathroom_ajar") {
+                    ctx.fillStyle = shadeHex(PAL.forest_green, -0.08);
+                    ctx.fillRect(80, 1340, 480, 220);
+                    ctx.fillStyle = PAL.old_gray;
+                    ctx.fillRect(90, 1280, 140, 65);
+                }
+            } else if (variant === "temple_wall_tree" || preset === "dark_fog") {
+                drawMoonAndFogSky(ctx, rng, PAL.black, PAL.forest_green, 280, 270);
+                ctx.fillStyle = PAL.old_gray;
+                ctx.fillRect(0, 1080, W, 440);
+                ctx.fillStyle = shadeHex(PAL.forest_green, -0.05);
+                for (let mx = 40; mx < W; mx += 170) {
+                    ctx.fillRect(mx, 1080, 65, 190);
+                }
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.22);
+                ctx.fillRect(0, 1055, W, 32);
+                ctx.fillStyle = PAL.black;
+                ctx.fillRect(490, 480, 130, 600);
+                for (let b = 0; b < 7; b++) {
+                    ctx.beginPath();
+                    ctx.arc(240 + b * 110, 470 + (b % 2) * 65, 175, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = shadeHex(PAL.black, 0.02);
+                ctx.fillRect(0, 1510, W, 410);
+            } else {
+                // Full preset library: sky_day, sunset, city_day, city_night, classroom, office, lab, hospital,
+                // mountain, ocean, village, rural_night_field, bus_night, supermarket, space, grid_tech, paper, plain_gradient
+                const topMap = {
+                    sky_day: PAL.fog_gray,
+                    sunset: PAL.warning_red,
+                    city_day: PAL.old_gray,
+                    city_night: PAL.black,
+                    classroom: PAL.old_gray,
+                    office: PAL.old_gray,
+                    lab: PAL.forest_green,
+                    hospital: PAL.fog_gray,
+                    mountain: PAL.forest_green,
+                    ocean: PAL.forest_green,
+                    village: PAL.forest_green,
+                    rural_night_field: PAL.black,
+                    bus_night: PAL.black,
+                    supermarket: PAL.old_gray,
+                    space: PAL.black,
+                    grid_tech: PAL.black,
+                    paper: PAL.fog_gray,
+                    plain_gradient: PAL.forest_green
+                };
+                drawMoonAndFogSky(ctx, rng, topMap[preset] || PAL.black, PAL.forest_green, 540, 320);
+            }
+
+            const blurCanvas = document.createElement("canvas");
+            blurCanvas.width = W;
+            blurCanvas.height = H;
+            const bCtx = blurCanvas.getContext("2d");
+            bCtx.filter = "blur(10px) brightness(0.72)";
+            bCtx.drawImage(c, 0, 0);
+            bCtx.filter = "none";
+
+            const entry = { normal: c, blurred: blurCanvas };
+            bgCache.set(key, entry);
+            return entry;
+        }
+
+        /* ============================================================================
+           5. CHARACTER & PROP VECTOR RENDERERS (REF-NIGHT SEMI-REALISTIC PROPORTIONS)
+           ============================================================================ */
+        function drawCapsuleLimb(ctx, x1, y1, x2, y2, r1, r2, fillCol, shadowCol, strokeCol) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const ang = Math.atan2(dy, dx);
+            const len = Math.hypot(dx, dy);
+
+            ctx.save();
+            ctx.translate(x1, y1);
+            ctx.rotate(ang);
+
+            ctx.beginPath();
+            ctx.arc(0, 0, r1, Math.PI * 0.5, Math.PI * 1.5);
+            ctx.arc(len, 0, r2, -Math.PI * 0.5, Math.PI * 0.5);
+            ctx.closePath();
+
+            const grad = ctx.createLinearGradient(0, -r1, 0, r1);
+            grad.addColorStop(0, fillCol);
+            grad.addColorStop(0.72, fillCol);
+            grad.addColorStop(1, shadowCol);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            if (strokeCol) {
+                ctx.strokeStyle = strokeCol;
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawCharacter(ctx, charCfg, t, env) {
+            const spec = G2.characters.find(c => c.id === charCfg.id) || G2.characters[0];
+            const scale = charCfg.scale || 1.0;
+            const flip = charCfg.flip ? -1 : 1;
+            const pose = charCfg.pose || "idle";
+            const face = charCfg.face || "neutral";
+
+            const blinkPhase = (t + (spec.id === "C2" ? 1.7 : 0.3)) % 3.9;
+            const isBlinking = blinkPhase > 3.74;
+
+            let bobY = Math.sin(t * 2.4) * 5;
+            let shiverX = 0;
+            let armSwing = Math.sin(t * 2.4) * 0.04;
+            let legSwing = 0;
+
+            if (pose === "walk") {
+                bobY = Math.abs(Math.sin(t * 7.5)) * -14;
+                armSwing = Math.sin(t * 7.5) * 0.36;
+                legSwing = Math.sin(t * 7.5) * 0.34;
+            } else if (pose === "scared") {
+                shiverX = Math.sin(t * 38) * 2.5;
+                bobY = Math.sin(t * 5) * 3;
+                armSwing = -0.25;
+            }
+
+            ctx.save();
+            ctx.translate(charCfg.x + shiverX, charCfg.y);
+
+            ctx.fillStyle = hexToRgba(PAL.black, 0.58);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 78 * scale, 18 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.scale(scale * flip, scale);
+            ctx.translate(0, bobY);
+
+            const outlineCol = shadeHex(PAL.black, 0.06);
+            const skinBase = spec.id === "C2" ? "#B89D82" : "#C6A88B";
+            const skinShadow = shadeHex(skinBase, -0.16);
+            const topCol = spec.clothing.top;
+            const topShadow = shadeHex(topCol, -0.18);
+            const botCol = spec.clothing.bottom;
+            const botShadow = shadeHex(botCol, -0.15);
+
+            if (pose === "sleep") {
+                ctx.fillStyle = PAL.forest_green;
+                ctx.beginPath();
+                ctx.roundRect(-140, -140, 320, 125, 36);
+                ctx.fill();
+                ctx.strokeStyle = outlineCol;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.fillStyle = PAL.fog_gray;
+                ctx.beginPath();
+                ctx.roundRect(-195, -155, 110, 65, 22);
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(-135, -135);
+                ctx.rotate(-0.2);
+                ctx.fillStyle = skinBase;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 56, 66, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = PAL.black;
+                ctx.beginPath();
+                ctx.arc(-6, -16, 56, Math.PI * 0.85, Math.PI * 2.15);
+                ctx.fill();
+                ctx.strokeStyle = PAL.black;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(10, -6); ctx.lineTo(32, -2);
+                ctx.stroke();
+                ctx.restore();
+                ctx.restore();
+                return;
+            }
+
+            if (spec.id === "C2") {
+                const sarongGrad = ctx.createLinearGradient(-56, -270, 56, -270);
+                sarongGrad.addColorStop(0, botCol);
+                sarongGrad.addColorStop(0.75, botCol);
+                sarongGrad.addColorStop(1, botShadow);
+                ctx.fillStyle = sarongGrad;
+                ctx.beginPath();
+                ctx.moveTo(-48, -270);
+                ctx.lineTo(48, -270);
+                ctx.lineTo(58, -18);
+                ctx.lineTo(-58, -18);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = outlineCol;
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            } else {
+                const lAngle = legSwing;
+                const rAngle = -legSwing;
+                drawCapsuleLimb(ctx, -24, -265, -26 + Math.sin(lAngle) * 70, -18, 22, 17, botCol, botShadow, outlineCol);
+                drawCapsuleLimb(ctx, 24, -265, 26 + Math.sin(rAngle) * 70, -18, 22, 17, botCol, botShadow, outlineCol);
+                ctx.fillStyle = PAL.black;
+                ctx.beginPath();
+                ctx.roundRect(-44, -22, 42, 18, 8);
+                ctx.roundRect(8, -22, 42, 18, 8);
+                ctx.fill();
+            }
+
+            drawCapsuleLimb(ctx, -46, -430, -64 - armSwing * 40, -255, 16, 13, topCol, topShadow, outlineCol);
+            ctx.fillStyle = skinBase;
+            ctx.beginPath();
+            ctx.arc(-64 - armSwing * 40, -248, 13, 0, Math.PI * 2);
+            ctx.fill();
+
+            const torsoGrad = ctx.createLinearGradient(-54, -445, 54, -445);
+            torsoGrad.addColorStop(0, shadeHex(topCol, 0.08));
+            torsoGrad.addColorStop(0.65, topCol);
+            torsoGrad.addColorStop(1, topShadow);
+            ctx.fillStyle = torsoGrad;
+            ctx.beginPath();
+            ctx.roundRect(-52, -450, 104, 195, [34, 34, 16, 16]);
+            ctx.fill();
+            ctx.strokeStyle = outlineCol;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.strokeStyle = hexToRgba(PAL.dim_yellow, 0.28);
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-48, -420);
+            ctx.lineTo(-48, -270);
+            ctx.stroke();
+
+            const frontHandX = pose === "scared" ? 44 : 62 + armSwing * 40;
+            const frontHandY = pose === "scared" ? -345 : -255;
+            drawCapsuleLimb(ctx, 46, -430, frontHandX, frontHandY, 16, 13, topCol, topShadow, outlineCol);
+            ctx.fillStyle = skinBase;
+            ctx.beginPath();
+            ctx.arc(frontHandX, frontHandY + 6, 13, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = skinShadow;
+            ctx.fillRect(-15, -478, 30, 34);
+
+            ctx.save();
+            ctx.translate(0, -535);
+
+            if (spec.id === "C2") {
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.15);
+                ctx.beginPath();
+                ctx.arc(-48, -22, 28, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            const headGrad = ctx.createLinearGradient(-56, -70, 56, 70);
+            headGrad.addColorStop(0, skinBase);
+            headGrad.addColorStop(0.7, skinBase);
+            headGrad.addColorStop(1, skinShadow);
+            ctx.fillStyle = headGrad;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 56, 70, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = outlineCol;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.fillStyle = spec.id === "C2" ? shadeHex(PAL.old_gray, -0.22) : PAL.black;
+            ctx.beginPath();
+            ctx.arc(0, -14, 57, Math.PI * 0.96, Math.PI * 2.08);
+            ctx.quadraticCurveTo(32, -32, -55, -12);
+            ctx.closePath();
+            ctx.fill();
+
+            const eyeY = -4;
+            if (isBlinking) {
+                ctx.strokeStyle = PAL.black;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(6, eyeY); ctx.lineTo(22, eyeY);
+                ctx.moveTo(32, eyeY); ctx.lineTo(46, eyeY);
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = PAL.black;
+                const eyeR = face === "scared" ? 5.5 : 4.5;
+                ctx.beginPath();
+                ctx.arc(14, eyeY, eyeR, 0, Math.PI * 2);
+                ctx.arc(38, eyeY, eyeR, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = PAL.fog_gray;
+                ctx.beginPath();
+                ctx.arc(15.5, eyeY - 1.5, 1.5, 0, Math.PI * 2);
+                ctx.arc(39.5, eyeY - 1.5, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.strokeStyle = PAL.black;
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            if (face === "scared") {
+                ctx.moveTo(5, -15); ctx.lineTo(22, -21);
+                ctx.moveTo(31, -21); ctx.lineTo(47, -15);
+            } else if (face === "serious") {
+                ctx.moveTo(6, -18); ctx.lineTo(22, -14);
+                ctx.moveTo(31, -14); ctx.lineTo(47, -18);
+            } else {
+                ctx.moveTo(6, -17); ctx.lineTo(22, -17);
+                ctx.moveTo(31, -17); ctx.lineTo(47, -17);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = PAL.black;
+            ctx.strokeStyle = PAL.black;
+            ctx.lineWidth = 3;
+            if (pose === "talk") {
+                const openH = 3 + env * 14;
+                ctx.beginPath();
+                ctx.ellipse(26, 28, 10, openH, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (face === "scared") {
+                ctx.beginPath();
+                ctx.ellipse(26, 30, 8, 11, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(16, 28);
+                ctx.lineTo(35, 28);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function drawProp(ctx, prop, t) {
+            ctx.save();
+            ctx.translate(prop.x, prop.y);
+            const sc = prop.scale || 1.0;
+            ctx.scale(sc, sc);
+
+            if (prop.type === "bag") {
+                ctx.fillStyle = hexToRgba(PAL.black, 0.55);
+                ctx.beginPath();
+                ctx.ellipse(0, 28, 42, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = PAL.old_gray;
+                ctx.beginPath();
+                ctx.roundRect(-34, -48, 68, 76, 18);
+                ctx.fill();
+                ctx.strokeStyle = PAL.black;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            } else if (prop.type === "paper_rules") {
+                const bob = Math.sin(t * 2.5) * 4;
+                ctx.translate(0, bob);
+                ctx.fillStyle = "#E8E2D2";
+                ctx.beginPath();
+                ctx.roundRect(-42, -55, 84, 110, 8);
+                ctx.fill();
+                ctx.strokeStyle = PAL.black;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.fillStyle = PAL.warning_red;
+                ctx.fillRect(-26, -38, 52, 8);
+                ctx.fillStyle = PAL.old_gray;
+                for (let l = 0; l < 5; l++) {
+                    ctx.fillRect(-26, -18 + l * 14, 48, 5);
+                }
+            } else if (prop.type === "monk_silhouette") {
+                const glideX = Math.sin(t * 0.7) * 24;
+                const hoverY = Math.sin(t * 2.0) * 6 - 36;
+                ctx.translate(glideX, hoverY);
+
+                const aura = ctx.createRadialGradient(0, -140, 20, 0, -140, 220);
+                aura.addColorStop(0, hexToRgba(PAL.fog_gray, 0.16));
+                aura.addColorStop(1, "rgba(0,0,0,0)");
+                ctx.fillStyle = aura;
+                ctx.fillRect(-220, -360, 440, 440);
+
+                ctx.fillStyle = shadeHex(PAL.black, 0.04);
+                ctx.beginPath();
+                ctx.moveTo(-48, -280);
+                ctx.lineTo(48, -280);
+                ctx.lineTo(66, 0);
+                ctx.lineTo(-66, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = hexToRgba(PAL.fog_gray, 0.25);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(0, -325, 36, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (prop.triggerTime && t >= prop.triggerTime) {
+                    const pulse = 0.65 + 0.35 * Math.sin(t * 8);
+                    ctx.strokeStyle = hexToRgba(PAL.warning_red, pulse);
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 14, 78, 30, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            } else if (prop.type === "bell_wave") {
+                if (prop.triggerTime && t >= prop.triggerTime) {
+                    const dt = (t - prop.triggerTime) % 2.4;
+                    for (let r = 0; r < 3; r++) {
+                        const p = clamp((dt - r * 0.35) / 1.4, 0, 1);
+                        if (p > 0 && p < 1) {
+                            ctx.strokeStyle = hexToRgba(PAL.warning_red, (1 - p) * 0.75);
+                            ctx.lineWidth = 5;
+                            ctx.beginPath();
+                            ctx.arc(0, 0, 40 + p * 240, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            } else if (prop.type === "door_knock") {
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.26);
+                ctx.fillRect(-150, -340, 300, 680);
+                ctx.strokeStyle = PAL.black;
+                ctx.lineWidth = 10;
+                ctx.strokeRect(-150, -340, 300, 680);
+
+                ctx.strokeStyle = shadeHex(PAL.old_gray, -0.36);
+                ctx.lineWidth = 6;
+                ctx.strokeRect(-110, -290, 220, 250);
+                ctx.strokeRect(-110, 10, 220, 270);
+
+                ctx.fillStyle = PAL.dim_yellow;
+                ctx.beginPath();
+                ctx.arc(108, 12, 16, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = hexToRgba(PAL.dim_yellow, 0.55);
+                ctx.fillRect(-146, 336, 292, 12);
+                ctx.fillStyle = PAL.black;
+                ctx.fillRect(-52, 335, 34, 14);
+                ctx.fillRect(18, 335, 34, 14);
+
+                if (prop.triggerTime && t >= prop.triggerTime) {
+                    for (let k = 0; k < 3; k++) {
+                        const kt = t - (prop.triggerTime + k * 0.38);
+                        if (kt >= 0 && kt < 0.9) {
+                            const p = kt / 0.9;
+                            ctx.strokeStyle = hexToRgba(PAL.warning_red, (1 - p) * 0.9);
+                            ctx.lineWidth = 7;
+                            ctx.beginPath();
+                            ctx.arc(0, -40, 28 + p * 190, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            } else if (prop.type === "tree_figures") {
+                const positions = [-190, -65, 70];
+                ctx.fillStyle = PAL.black;
+                for (const fx of positions) {
+                    ctx.beginPath();
+                    ctx.arc(fx, -195, 24, 0, Math.PI * 2);
+                    ctx.roundRect(fx - 26, -168, 52, 168, 14);
+                    ctx.fill();
+                }
+                if (prop.triggerTime && t >= prop.triggerTime) {
+                    const alpha = easeOutCubic(clamp((t - prop.triggerTime) / 0.8, 0, 1));
+                    const fx = 205;
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = PAL.black;
+                    ctx.beginPath();
+                    ctx.arc(fx, -195, 24, 0, Math.PI * 2);
+                    ctx.roundRect(fx - 26, -168, 52, 168, 14);
+                    ctx.fill();
+                    ctx.strokeStyle = PAL.warning_red;
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            } else if (prop.type === "bathroom_ajar") {
+                ctx.fillStyle = PAL.black;
+                ctx.fillRect(-130, -320, 260, 640);
+                ctx.strokeStyle = PAL.old_gray;
+                ctx.lineWidth = 8;
+                ctx.strokeRect(-130, -320, 260, 640);
+
+                ctx.fillStyle = shadeHex(PAL.old_gray, -0.24);
+                ctx.beginPath();
+                ctx.moveTo(-130, -320);
+                ctx.lineTo(45, -285);
+                ctx.lineTo(45, 295);
+                ctx.lineTo(-130, 320);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        /* ============================================================================
+           6. GRAPHICS, HUD CHIP, CARDS & THAI SUBTITLE RENDERER
+           ============================================================================ */
+        function wrapThaiLines(ctx, text, maxWidth) {
+            const tokens = segmentThaiWords(text);
+            const lines = [];
+            let current = "";
+            for (const tok of tokens) {
+                const test = current + tok;
+                if (ctx.measureText(test).width > maxWidth && current.trim().length > 0) {
+                    lines.push(current.trim());
+                    current = tok.trimStart();
+                } else {
+                    current = test;
+                }
+            }
+            if (current.trim().length > 0) lines.push(current.trim());
+            return lines;
+        }
+
+        function drawHudChip(ctx, text) {
+            if (!G1.hud.enabled || !text) return;
+            ctx.save();
+            ctx.font = '600 26px "Prompt", "Kanit", sans-serif';
+            const tw = ctx.measureText(text).width;
+            const padX = 28;
+            const boxW = tw + padX * 2 + 24;
+            const boxH = 56;
+            const x = 56;
+            const y = 76;
+
+            ctx.fillStyle = hexToRgba(PAL.black, 0.78);
+            ctx.beginPath();
+            ctx.roundRect(x, y, boxW, boxH, 999);
+            ctx.fill();
+            ctx.strokeStyle = hexToRgba(PAL.fog_gray, 0.32);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = PAL.warning_red;
+            ctx.beginPath();
+            ctx.arc(x + 26, y + boxH / 2, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#ECEFED";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, x + 44, y + boxH / 2 + 1);
+            ctx.restore();
+        }
+
+        function drawCard(ctx, card, t) {
+            if (t < card.startTime) return;
+            const age = t - card.startTime;
+            const enter = easeOutCubic(clamp(age / 0.35, 0, 1));
+
+            ctx.save();
+            ctx.globalAlpha = enter;
+
+            if (card.type === "title_card") {
+                const x = 56;
+                const y = 164 + (1 - enter) * -22;
+                const w = W - 112;
+                const h = 196;
+
+                ctx.fillStyle = hexToRgba("#F2EDE2", 0.96);
+                ctx.shadowColor = "rgba(0,0,0,0.65)";
+                ctx.shadowBlur = 28;
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, 20);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = PAL.warning_red;
+                ctx.beginPath();
+                ctx.roundRect(x, y, 14, h, [20, 0, 0, 20]);
+                ctx.fill();
+
+                ctx.fillStyle = PAL.black;
+                ctx.font = '800 42px "Prompt", "Kanit", sans-serif';
+                ctx.fillText(card.title, x + 38, y + 72);
+
+                ctx.fillStyle = PAL.warning_red;
+                ctx.fillRect(x + 38, y + 92, (w - 86) * enter, 6);
+
+                ctx.fillStyle = PAL.old_gray;
+                ctx.font = '600 28px "Prompt", "Kanit", sans-serif';
+                ctx.fillText(card.subtitle || "", x + 38, y + 146);
+            } else if (card.type === "rule_counter") {
+                const x = 56;
+                const y = 160 + (1 - enter) * -18;
+                const w = W - 112;
+                const h = 142;
+
+                ctx.fillStyle = hexToRgba("#F2EDE2", 0.95);
+                ctx.shadowColor = "rgba(0,0,0,0.65)";
+                ctx.shadowBlur = 24;
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, 18);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = PAL.warning_red;
+                ctx.beginPath();
+                ctx.roundRect(x, y, 14, h, [18, 0, 0, 18]);
+                ctx.fill();
+
+                ctx.fillStyle = PAL.warning_red;
+                ctx.font = '800 30px "Prompt", "Kanit", sans-serif';
+                ctx.fillText(card.ruleNum, x + 36, y + 52);
+
+                ctx.fillStyle = PAL.black;
+                ctx.font = '700 36px "Prompt", "Kanit", sans-serif';
+                ctx.fillText(card.ruleTitle, x + 36, y + 104);
+            } else if (card.type === "warning_stamp") {
+                const pop = easeOutBack(clamp(age / 0.28, 0, 1));
+                ctx.translate(W * 0.5, 430);
+                ctx.rotate(-0.11);
+                ctx.scale(1.45 - 0.45 * pop, 1.45 - 0.45 * pop);
+
+                ctx.font = '800 44px "Prompt", "Kanit", sans-serif';
+                const tw = ctx.measureText(card.text).width;
+                const bw = tw + 64;
+                const bh = 86;
+
+                ctx.fillStyle = hexToRgba(PAL.black, 0.72);
+                ctx.beginPath();
+                ctx.roundRect(-bw / 2, -bh / 2, bw, bh, 14);
+                ctx.fill();
+
+                ctx.strokeStyle = PAL.warning_red;
+                ctx.lineWidth = 7;
+                ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+
+                ctx.fillStyle = PAL.warning_red;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(card.text, 0, 2);
+            } else if (card.type === "list") {
+                const x = 64;
+                const y = 340 + (1 - enter) * 24;
+                const w = W - 128;
+                const h = 430;
+
+                ctx.fillStyle = hexToRgba("#F2EDE2", 0.95);
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, 20);
+                ctx.fill();
+
+                ctx.fillStyle = PAL.warning_red;
+                ctx.fillRect(x, y, 14, h);
+
+                ctx.fillStyle = PAL.black;
+                ctx.font = '800 34px "Prompt", "Kanit", sans-serif';
+                ctx.fillText(card.title, x + 36, y + 58);
+
+                ctx.font = '600 28px "Prompt", "Kanit", sans-serif';
+                (card.items || []).forEach((item, idx) => {
+                    const itemAlpha = easeOutCubic(clamp((age - idx * 0.28) / 0.3, 0, 1));
+                    ctx.globalAlpha = enter * itemAlpha;
+                    ctx.fillStyle = idx === 0 ? PAL.warning_red : PAL.black;
+                    ctx.fillText(item, x + 36, y + 122 + idx * 62);
+                });
+            } else if (card.type === "checklist") {
+                const x = 64;
+                const y = 340 + (1 - enter) * 24;
+                const w = W - 128;
+                const h = 320;
+
+                ctx.fillStyle = hexToRgba("#F2EDE2", 0.95);
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, 20);
+                ctx.fill();
+
+                ctx.fillStyle = PAL.black;
+                ctx.font = '800 34px "Prompt", "Kanit", sans-serif';
+                ctx.fillText(card.title, x + 36, y + 56);
+
+                (card.rows || []).forEach((row, idx) => {
+                    const rowAlpha = easeOutCubic(clamp((age - idx * 0.3) / 0.3, 0, 1));
+                    ctx.globalAlpha = enter * rowAlpha;
+                    const ry = y + 116 + idx * 68;
+                    ctx.fillStyle = row.status === "ok" ? PAL.forest_green : PAL.warning_red;
+                    ctx.beginPath();
+                    ctx.arc(x + 54, ry - 8, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = "#FFF";
+                    ctx.font = '800 24px "Prompt", sans-serif';
+                    ctx.textAlign = "center";
+                    ctx.fillText(row.status === "ok" ? "✓" : "!", x + 54, ry);
+                    ctx.textAlign = "left";
+                    ctx.fillStyle = PAL.black;
+                    ctx.font = '600 30px "Prompt", "Kanit", sans-serif';
+                    ctx.fillText(row.text, x + 88, ry);
+                });
+            } else if (card.type === "phone_mockup") {
+                const pw = 320;
+                const ph = 520;
+                const px = 90;
+                const py = 350 + (1 - enter) * 35;
+
+                ctx.fillStyle = PAL.black;
+                ctx.beginPath();
+                ctx.roundRect(px, py, pw, ph, 42);
+                ctx.fill();
+                ctx.strokeStyle = PAL.old_gray;
+                ctx.lineWidth = 6;
+                ctx.stroke();
+
+                const scrGrad = ctx.createLinearGradient(px, py, px, py + ph);
+                scrGrad.addColorStop(0, PAL.forest_green);
+                scrGrad.addColorStop(1, PAL.black);
+                ctx.fillStyle = scrGrad;
+                ctx.beginPath();
+                ctx.roundRect(px + 14, py + 14, pw - 28, ph - 28, 32);
+                ctx.fill();
+
+                ctx.fillStyle = PAL.black;
+                ctx.beginPath();
+                ctx.roundRect(px + pw / 2 - 52, py + 14, 104, 24, 12);
+                ctx.fill();
+
+                ctx.textAlign = "center";
+                if (card.screen === "lock") {
+                    ctx.fillStyle = PAL.warning_red;
+                    ctx.font = '800 78px "Prompt", sans-serif';
+                    ctx.fillText(card.timeText || "02:00", px + pw / 2, py + 185);
+                    ctx.fillStyle = PAL.fog_gray;
+                    ctx.font = '600 24px "Prompt", sans-serif';
+                    ctx.fillText(card.dateText || "", px + pw / 2, py + 240);
+                } else {
+                    ctx.fillStyle = PAL.dim_yellow;
+                    ctx.font = '700 30px "Prompt", sans-serif';
+                    ctx.fillText(card.titleText || "", px + pw / 2, py + 145);
+                    ctx.fillStyle = "#ECEFED";
+                    ctx.font = '600 26px "Prompt", sans-serif';
+                    (card.bodyLines || []).forEach((line, idx) => {
+                        ctx.fillText(line, px + pw / 2, py + 215 + idx * 42);
+                    });
+                }
+                ctx.textAlign = "left";
+            } else if (card.type === "ending_card") {
+                const cx = W / 2;
+                const cy = H * 0.44;
+                ctx.textAlign = "center";
+
+                const bAlpha = easeOutCubic(clamp(age / 0.35, 0, 1));
+                ctx.globalAlpha = bAlpha;
+                ctx.fillStyle = PAL.warning_red;
+                ctx.beginPath();
+                ctx.roundRect(cx - 130, cy - 170, 260, 52, 999);
+                ctx.fill();
+                ctx.fillStyle = "#FFF";
+                ctx.font = '700 26px "Prompt", sans-serif';
+                ctx.fillText(card.badge || "จบตอน", cx, cy - 135);
+
+                const hAlpha = easeOutCubic(clamp((age - 0.25) / 0.45, 0, 1));
+                ctx.globalAlpha = hAlpha;
+                ctx.fillStyle = "#ECEFED";
+                ctx.font = '800 64px "Prompt", sans-serif';
+                ctx.fillText(card.headline || "", cx, cy - 35);
+
+                ctx.fillStyle = PAL.warning_red;
+                ctx.fillRect(cx - 220 * hAlpha, cy + 5, 440 * hAlpha, 7);
+
+                const sAlpha = easeOutCubic(clamp((age - 0.55) / 0.45, 0, 1));
+                ctx.globalAlpha = sAlpha;
+                ctx.fillStyle = PAL.dim_yellow;
+                ctx.font = '600 34px "Prompt", sans-serif';
+                ctx.fillText(card.subline || "", cx, cy + 75);
+
+                ctx.fillStyle = PAL.fog_gray;
+                ctx.font = '600 28px "Prompt", sans-serif';
+                ctx.fillText(card.cta || "", cx, cy + 145);
+                ctx.textAlign = "left";
+            }
+
+            ctx.restore();
+        }
+
+        function drawSubtitles(ctx, scene, t) {
+            if (!scene || !scene.chunks || !scene.chunks.length) return;
+            let activeChunk = scene.chunks[scene.chunks.length - 1];
+            for (const ch of scene.chunks) {
+                if (t >= ch.start && t <= ch.end) {
+                    activeChunk = ch;
+                    break;
+                }
+            }
+            const text = activeChunk.text;
+            if (!text) return;
+
+            ctx.save();
+            ctx.font = '800 54px "Prompt", "Kanit", "Noto Sans Thai", sans-serif';
+            ctx.textBaseline = "middle";
+
+            const maxLineWidth = W - 120;
+            let lines = wrapThaiLines(ctx, text, maxLineWidth);
+            if (lines.length > 2) {
+                lines = [lines[0], lines.slice(1).join(" ")];
+            }
+
+            const lineHeight = 76;
+            const baseY = H * 0.71 - ((lines.length - 1) * lineHeight) / 2;
+            const highlights = scene.highlightWords || [];
+
+            lines.forEach((line, lIdx) => {
+                const y = baseY + lIdx * lineHeight;
+                const totalW = ctx.measureText(line).width;
+                const drawX = (W - totalW) / 2;
+
+                let segments = [{ str: line, hl: false }];
+                for (const hw of highlights) {
+                    if (!hw) continue;
+                    const nextSegs = [];
+                    for (const seg of segments) {
+                        if (seg.hl || !seg.str.includes(hw)) {
+                            nextSegs.push(seg);
+                        } else {
+                            const parts = seg.str.split(hw);
+                            parts.forEach((p, pi) => {
+                                if (p) nextSegs.push({ str: p, hl: false });
+                                if (pi < parts.length - 1) nextSegs.push({ str: hw, hl: true });
+                            });
+                        }
+                    }
+                    segments = nextSegs;
+                }
+
+                let scanX = drawX;
+                for (const seg of segments) {
+                    const sw = ctx.measureText(seg.str).width;
+                    if (seg.hl && G1.subtitle_style === "red_pill") {
+                        ctx.fillStyle = PAL.warning_red;
+                        ctx.beginPath();
+                        ctx.roundRect(scanX - 12, y - 34, sw + 24, 68, 16);
+                        ctx.fill();
+                    }
+                    scanX += sw;
+                }
+
+                scanX = drawX;
+                for (const seg of segments) {
+                    const sw = ctx.measureText(seg.str).width;
+                    ctx.lineJoin = "round";
+                    ctx.lineWidth = 10;
+                    ctx.strokeStyle = PAL.black;
+                    ctx.strokeText(seg.str, scanX, y);
+
+                    ctx.fillStyle = (seg.hl && G1.subtitle_style === "yellow_text") ? PAL.dim_yellow : "#FFFFFF";
+                    ctx.fillText(seg.str, scanX, y);
+                    scanX += sw;
+                }
+            });
+
+            ctx.restore();
+        }
+
+        /* ============================================================================
+           7. MASTER DETERMINISTIC FRAME RENDERER: renderAtTime(ctx, t, scale)
+           ============================================================================ */
+        function renderAtTime(ctx, t, scale = 1) {
+            ctx.save();
+            ctx.scale(scale, scale);
+
+            const scene = getSceneAtTime(t);
+            const localT = Math.max(0, t - scene.start);
+            const sceneDur = Math.max(0.1, scene.end - scene.start);
+            const progress = clamp(localT / sceneDur, 0, 1);
+            const env = getEnvelopeAt(t);
+
+            const cam = scene.camera || { zoomFrom: 1, zoomTo: 1, panX: 0, panY: 0 };
+            const zoom = lerp(cam.zoomFrom || 1, cam.zoomTo || 1, easeInOutCubic(progress));
+            const panX = lerp(0, cam.panX || 0, easeInOutCubic(progress));
+            const panY = lerp(0, cam.panY || 0, easeInOutCubic(progress));
+
+            const hasActiveBlurCard = (scene.resolvedCards || []).some(
+                c => t >= c.startTime && (scene.bg && scene.bg.blurBg)
+            );
+            const bgEntry = renderStaticBackground(scene.bg.preset, scene.bg.variant);
+
+            ctx.save();
+            ctx.translate(W / 2 + panX * 0.5, H / 2 + panY * 0.5);
+            ctx.scale(zoom, zoom);
+            ctx.translate(-W / 2, -H / 2);
+            ctx.drawImage(hasActiveBlurCard ? bgEntry.blurred : bgEntry.normal, 0, 0);
+            ctx.restore();
+
+            ctx.save();
+            ctx.translate(W / 2 + panX, H / 2 + panY);
+            ctx.scale(zoom, zoom);
+            ctx.translate(-W / 2, -H / 2);
+
+            for (const prop of scene.resolvedProps || []) drawProp(ctx, prop, t);
+            for (const ch of scene.characters || []) drawCharacter(ctx, ch, t, env);
+            ctx.restore();
+
+            const fogShift = Math.sin(t * 0.45) * 65;
+            const mistGrad = ctx.createLinearGradient(0, H * 0.72, 0, H);
+            mistGrad.addColorStop(0, "rgba(164,170,165,0)");
+            mistGrad.addColorStop(1, hexToRgba(PAL.fog_gray, 0.16));
+            ctx.fillStyle = mistGrad;
+            ctx.fillRect(fogShift - 80, H * 0.72, W + 160, H * 0.28);
+
+            const vig = ctx.createRadialGradient(W / 2, H / 2, W * 0.36, W / 2, H / 2, H * 0.68);
+            vig.addColorStop(0, "rgba(0,0,0,0)");
+            vig.addColorStop(1, hexToRgba(PAL.black, 0.62));
+            ctx.fillStyle = vig;
+            ctx.fillRect(0, 0, W, H);
+
+            const grain = getFilmGrainCanvas();
+            const gx = -Math.floor((mulberry32(Math.floor(t * 30) + 11)() * 128));
+            const gy = -Math.floor((mulberry32(Math.floor(t * 30) + 97)() * 128));
+            ctx.drawImage(grain, gx, gy, W + 128, H + 128);
+
+            if (localT < 0.32 && scene.id !== "S1") {
+                const tr = 1 - localT / 0.32;
+                if (scene.transition === "flash") {
+                    ctx.fillStyle = hexToRgba(PAL.warning_red, tr * 0.65);
+                    ctx.fillRect(0, 0, W, H);
+                } else {
+                    ctx.fillStyle = hexToRgba(PAL.black, tr * 0.85);
+                    ctx.fillRect(0, 0, W, H);
+                }
+            }
+
+            drawHudChip(ctx, scene.hud && scene.hud.chip);
+            for (const card of scene.resolvedCards || []) drawCard(ctx, card, t);
+            drawSubtitles(ctx, scene, t);
+
+            ctx.restore();
+        }
+
+        /* ============================================================================
+           8. PROCEDURAL WEB AUDIO ENGINE (PREVIEW & OFFLINE EXPORT IDENTICAL)
+           ============================================================================ */
+        let sharedNoiseBuffer = null;
+
+        function getNoiseBuffer(audioCtx) {
+            if (sharedNoiseBuffer && sharedNoiseBuffer.sampleRate === audioCtx.sampleRate) {
+                return sharedNoiseBuffer;
+            }
+            const sr = audioCtx.sampleRate;
+            const len = sr * 3;
+            const buf = audioCtx.createBuffer(1, len, sr);
+            const data = buf.getChannelData(0);
+            const rng = mulberry32(991122);
+            for (let i = 0; i < len; i++) data[i] = rng() * 2 - 1;
+            sharedNoiseBuffer = buf;
+            return buf;
+        }
+
+        function playSfxAt(audioCtx, dest, name, startTime, masterLevel = 0.4) {
+            const t0 = Math.max(audioCtx.currentTime || 0, startTime);
+            const g = audioCtx.createGain();
+            g.gain.setValueAtTime(masterLevel, t0);
+            g.connect(dest);
+            const noiseBuf = getNoiseBuffer(audioCtx);
+
+            if (name === "boom" || name === "hit") {
+                const osc = audioCtx.createOscillator();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(name === "boom" ? 95 : 150, t0);
+                osc.frequency.exponentialRampToValueAtTime(28, t0 + 0.65);
+                g.gain.setValueAtTime(masterLevel * 1.1, t0);
+                g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.7);
+                osc.connect(g);
+                osc.start(t0);
+                osc.stop(t0 + 0.72);
+            } else if (name === "whoosh" || name === "wind" || name === "rain") {
+                const src = audioCtx.createBufferSource();
+                src.buffer = noiseBuf;
+                const filt = audioCtx.createBiquadFilter();
+                filt.type = name === "rain" ? "highpass" : "bandpass";
+                filt.frequency.setValueAtTime(name === "rain" ? 2400 : 260, t0);
+                if (name !== "rain") {
+                    filt.frequency.exponentialRampToValueAtTime(name === "whoosh" ? 920 : 410, t0 + 0.35);
+                }
+                const dur = name === "whoosh" ? 0.45 : 1.4;
+                g.gain.setValueAtTime(0.001, t0);
+                g.gain.linearRampToValueAtTime(masterLevel * 0.7, t0 + dur * 0.3);
+                g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+                src.connect(filt);
+                filt.connect(g);
+                src.start(t0);
+                src.stop(t0 + dur + 0.05);
+            } else if (name === "door") {
+                for (let k = 0; k < 3; k++) {
+                    const kt = t0 + k * 0.38;
+                    const osc = audioCtx.createOscillator();
+                    const kg = audioCtx.createGain();
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(165, kt);
+                    osc.frequency.exponentialRampToValueAtTime(62, kt + 0.11);
+                    kg.gain.setValueAtTime(masterLevel * 1.15, kt);
+                    kg.gain.exponentialRampToValueAtTime(0.001, kt + 0.13);
+                    osc.connect(kg);
+                    kg.connect(dest);
+                    osc.start(kt);
+                    osc.stop(kt + 0.14);
+                }
+            } else if (name === "ding" || name === "coin" || name === "sparkle") {
+                const freqs = name === "ding" ? [220, 329.6, 554.4] : [987.77, 1318.5];
+                freqs.forEach((f, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const bg = audioCtx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(f, t0 + i * 0.05);
+                    bg.gain.setValueAtTime((masterLevel * 0.55) / (i + 1), t0 + i * 0.05);
+                    bg.gain.exponentialRampToValueAtTime(0.001, t0 + (name === "ding" ? 2.2 : 0.45));
+                    osc.connect(bg);
+                    bg.connect(dest);
+                    osc.start(t0 + i * 0.05);
+                    osc.stop(t0 + (name === "ding" ? 2.25 : 0.5));
+                });
+            } else if (name === "heartbeat") {
+                for (let b = 0; b < 2; b++) {
+                    const bt = t0 + b * 0.24;
+                    const osc = audioCtx.createOscillator();
+                    const bg = audioCtx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(b === 0 ? 68 : 56, bt);
+                    osc.frequency.exponentialRampToValueAtTime(30, bt + 0.16);
+                    bg.gain.setValueAtTime(masterLevel * 1.0, bt);
+                    bg.gain.exponentialRampToValueAtTime(0.001, bt + 0.18);
+                    osc.connect(bg);
+                    bg.connect(dest);
+                    osc.start(bt);
+                    osc.stop(bt + 0.2);
+                }
+            } else if (name === "stamp" || name === "footstep") {
+                const osc = audioCtx.createOscillator();
+                osc.type = name === "stamp" ? "square" : "triangle";
+                osc.frequency.setValueAtTime(135, t0);
+                osc.frequency.exponentialRampToValueAtTime(42, t0 + 0.14);
+                g.gain.setValueAtTime(masterLevel * 0.85, t0);
+                g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.16);
+                osc.connect(g);
+                osc.start(t0);
+                osc.stop(t0 + 0.18);
+            } else if (name === "paper") {
+                const src = audioCtx.createBufferSource();
+                src.buffer = noiseBuf;
+                const filt = audioCtx.createBiquadFilter();
+                filt.type = "highpass";
+                filt.frequency.value = 1800;
+                g.gain.setValueAtTime(masterLevel * 0.45, t0);
+                g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+                src.connect(filt);
+                filt.connect(g);
+                src.start(t0);
+                src.stop(t0 + 0.24);
+            } else if (name === "glitch" || name === "laugh") {
+                const osc = audioCtx.createOscillator();
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(480, t0);
+                osc.frequency.setValueAtTime(190, t0 + 0.06);
+                osc.frequency.setValueAtTime(720, t0 + 0.12);
+                g.gain.setValueAtTime(masterLevel * 0.55, t0);
+                g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+                osc.connect(g);
+                osc.start(t0);
+                osc.stop(t0 + 0.24);
+            } else if (name === "alarm" || name === "siren") {
+                for (let p = 0; p < 4; p++) {
+                    const pt = t0 + p * 0.16;
+                    const osc = audioCtx.createOscillator();
+                    const ag = audioCtx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(name === "alarm" ? 1320 : 660 + p * 120, pt);
+                    ag.gain.setValueAtTime(masterLevel * 0.5, pt);
+                    ag.gain.exponentialRampToValueAtTime(0.001, pt + 0.11);
+                    osc.connect(ag);
+                    ag.connect(dest);
+                    osc.start(pt);
+                    osc.stop(pt + 0.12);
+                }
+            } else {
+                // click, pop, typing, error, tick
+                const osc = audioCtx.createOscillator();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(name === "error" ? 180 : 620, t0);
+                g.gain.setValueAtTime(masterLevel * 0.4, t0);
+                g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
+                osc.connect(g);
+                osc.start(t0);
+                osc.stop(t0 + 0.14);
+            }
+        }
+
+        function scheduleFullAudioMix(audioCtx, masterDest, startOffset = 0, duration = syncState.totalDuration) {
+            const stopNodes = [];
+
+            const limiter = audioCtx.createDynamicsCompressor();
+            limiter.threshold.value = -6;
+            limiter.knee.value = 12;
+            limiter.ratio.value = 8;
+            limiter.attack.value = 0.003;
+            limiter.release.value = 0.15;
+            limiter.connect(masterDest);
+
+            const now = audioCtx.currentTime || 0;
+
+            if (syncState.isAudioLoaded && syncState.audioBuffer) {
+                const voSrc = audioCtx.createBufferSource();
+                voSrc.buffer = syncState.audioBuffer;
+                const voGain = audioCtx.createGain();
+                voGain.gain.value = 1.0;
+                voSrc.connect(voGain);
+                voGain.connect(limiter);
+                const remaining = Math.max(0, syncState.audioBuffer.duration - startOffset);
+                if (remaining > 0.02) {
+                    voSrc.start(now, startOffset, remaining);
+                    stopNodes.push(voSrc);
+                }
+            }
+
+            const musicGain = audioCtx.createGain();
+            musicGain.gain.setValueAtTime(0.14, now);
+            musicGain.connect(limiter);
+
+            for (let t = startOffset; t < duration; t += 0.1) {
+                const env = getEnvelopeAt(t);
+                const targetG = env > 0.08 ? 0.07 : 0.14;
+                musicGain.gain.setTargetAtTime(targetG, now + (t - startOffset), 0.05);
+            }
+
+            const beatDur = 60 / G5.bpm;
+            const scaleFreqs = [73.42, 77.78, 98.0, 110.0, 116.54, 146.83];
+            let beatIdx = Math.floor(startOffset / beatDur);
+            for (let bt = beatIdx * beatDur; bt < duration; bt += beatDur * 2) {
+                if (bt < startOffset - 0.1) continue;
+                const when = now + Math.max(0, bt - startOffset);
+                const freq = scaleFreqs[beatIdx % scaleFreqs.length];
+                const osc = audioCtx.createOscillator();
+                const ng = audioCtx.createGain();
+                osc.type = beatIdx % 4 === 0 ? "triangle" : "sine";
+                osc.frequency.setValueAtTime(freq, when);
+                ng.gain.setValueAtTime(0.001, when);
+                ng.gain.linearRampToValueAtTime(0.45, when + 0.15);
+                ng.gain.exponentialRampToValueAtTime(0.001, when + beatDur * 1.9);
+                osc.connect(ng);
+                ng.connect(musicGain);
+                osc.start(when);
+                osc.stop(when + beatDur * 1.95);
+                stopNodes.push(osc);
+                beatIdx++;
+            }
+
+            const ambGain = audioCtx.createGain();
+            ambGain.gain.setValueAtTime(0.10, now);
+            ambGain.connect(limiter);
+
+            const noiseSrc = audioCtx.createBufferSource();
+            noiseSrc.buffer = getNoiseBuffer(audioCtx);
+            noiseSrc.loop = true;
+            const band = audioCtx.createBiquadFilter();
+            band.type = "bandpass";
+            band.frequency.value = 340;
+            band.Q.value = 1.4;
+            noiseSrc.connect(band);
+            band.connect(ambGain);
+            noiseSrc.start(now);
+            noiseSrc.stop(now + Math.max(0.1, duration - startOffset));
+            stopNodes.push(noiseSrc);
+
+            for (let ct = Math.ceil(startOffset / 1.8) * 1.8; ct < duration; ct += 1.8) {
+                const when = now + (ct - startOffset);
+                const osc = audioCtx.createOscillator();
+                const cg = audioCtx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(4200, when);
+                cg.gain.setValueAtTime(0.001, when);
+                cg.gain.linearRampToValueAtTime(0.12, when + 0.04);
+                cg.gain.exponentialRampToValueAtTime(0.001, when + 0.22);
+                osc.connect(cg);
+                cg.connect(ambGain);
+                osc.start(when);
+                osc.stop(when + 0.25);
+                stopNodes.push(osc);
+            }
+
+            for (const sc of syncState.sceneTimings) {
+                for (const fx of sc.resolvedSfx || []) {
+                    if (fx.triggerTime >= startOffset && fx.triggerTime <= duration) {
+                        playSfxAt(audioCtx, limiter, fx.name, now + (fx.triggerTime - startOffset), 0.4);
+                    }
+                }
+            }
+
+            return () => {
+                stopNodes.forEach(n => {
+                    try { n.stop(); } catch (_) { }
+                });
+            };
+        }
+
+        /* ============================================================================
+           9. PLAYBACK CONTROLLER & MOBILE UI BINDINGS
+           ============================================================================ */
+        const canvas = document.getElementById("stageCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const player = {
+            isPlaying: false,
+            isMuted: false,
+            currentTime: 0,
+            lastFramePerf: 0,
+            audioCtx: null,
+            masterGain: null,
+            stopAudioFn: null,
+            nudges: {}
+        };
+
+        function formatTime(sec) {
+            const s = Math.max(0, Math.floor(sec));
+            const mm = String(Math.floor(s / 60)).padStart(2, "0");
+            const ss = String(s % 60).padStart(2, "0");
+            return `${mm}:${ss}`;
+        }
+
+        function ensureAudioContext() {
+            if (!player.audioCtx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                player.audioCtx = new AC();
+                player.masterGain = player.audioCtx.createGain();
+                player.masterGain.gain.value = player.isMuted ? 0 : 1;
+                player.masterGain.connect(player.audioCtx.destination);
+            }
+            if (player.audioCtx.state === "suspended") {
+                player.audioCtx.resume();
+            }
+        }
+
+        function stopLiveAudio() {
+            if (player.stopAudioFn) {
+                player.stopAudioFn();
+                player.stopAudioFn = null;
+            }
+        }
+
+        function startLiveAudioFrom(t) {
+            stopLiveAudio();
+            ensureAudioContext();
+            player.masterGain.gain.value = player.isMuted ? 0 : 1;
+            player.stopAudioFn = scheduleFullAudioMix(player.audioCtx, player.masterGain, t, syncState.totalDuration);
+        }
+
+        function updateUIControls() {
+            const slider = document.getElementById("timelineSlider");
+            slider.max = syncState.totalDuration.toFixed(2);
+            slider.value = player.currentTime.toFixed(2);
+            document.getElementById("timeDisplay").textContent =
+                `${formatTime(player.currentTime)} / ${formatTime(syncState.totalDuration)}`;
+
+            document.getElementById("btnPlayPause").textContent = player.isPlaying ? "⏸ หยุด" : "▶ เล่น";
+            document.getElementById("btnMute").textContent = player.isMuted ? "🔇 ปิดเสียง" : "🔊 เสียง";
+
+            const activeScene = getSceneAtTime(player.currentTime);
+            document.querySelectorAll(".scene-pill").forEach(btn => {
+                btn.classList.toggle("active", btn.dataset.sceneId === activeScene.id);
+            });
+        }
+
+        function renderSyncDrawerAndPills() {
+            const pillsWrap = document.getElementById("scenePills");
+            const drawerWrap = document.getElementById("syncRowsContainer");
+            pillsWrap.innerHTML = "";
+            drawerWrap.innerHTML = "";
+
+            syncState.sceneTimings.forEach((sc, idx) => {
+                const pill = document.createElement("button");
+                pill.type = "button";
+                pill.className = "scene-pill";
+                pill.dataset.sceneId = sc.id;
+                pill.textContent = `${idx + 1}. ${sc.label}`;
+                pill.addEventListener("click", () => {
+                    seekTo(sc.start + 0.02);
+                });
+                pillsWrap.appendChild(pill);
+
+                const row = document.createElement("div");
+                row.className = "sync-row";
+
+                const title = document.createElement("div");
+                title.className = "sync-row-title";
+                title.textContent = `${idx + 1}. ${sc.label}`;
+
+                const timeSpan = document.createElement("div");
+                timeSpan.className = "sync-row-time";
+                const nudgeTxt = sc.nudge ? ` (${sc.nudge > 0 ? "+" : ""}${sc.nudge.toFixed(1)}s)` : "";
+                timeSpan.textContent = `${sc.start.toFixed(1)}s${nudgeTxt}`;
+
+                const grp = document.createElement("div");
+                grp.className = "nudge-group";
+
+                const btnMinus = document.createElement("button");
+                btnMinus.type = "button";
+                btnMinus.className = "nudge-btn";
+                btnMinus.textContent = "−0.1";
+                btnMinus.addEventListener("click", () => {
+                    player.nudges[sc.id] = Number(((player.nudges[sc.id] || 0) - 0.1).toFixed(1));
+                    buildSyncTimeline(player.nudges);
+                    renderSyncDrawerAndPills();
+                    const updated = syncState.sceneTimings.find(s => s.id === sc.id);
+                    if (updated) seekTo(updated.start + 0.02);
+                });
+
+                const btnPlus = document.createElement("button");
+                btnPlus.type = "button";
+                btnPlus.className = "nudge-btn";
+                btnPlus.textContent = "+0.1";
+                btnPlus.addEventListener("click", () => {
+                    player.nudges[sc.id] = Number(((player.nudges[sc.id] || 0) + 0.1).toFixed(1));
+                    buildSyncTimeline(player.nudges);
+                    renderSyncDrawerAndPills();
+                    const updated = syncState.sceneTimings.find(s => s.id === sc.id);
+                    if (updated) seekTo(updated.start + 0.02);
+                });
+
+                grp.appendChild(btnMinus);
+                grp.appendChild(btnPlus);
+                row.appendChild(title);
+                row.appendChild(timeSpan);
+                row.appendChild(grp);
+                drawerWrap.appendChild(row);
+            });
+        }
+
+        function seekTo(t) {
+            player.currentTime = clamp(t, 0, syncState.totalDuration);
+            renderAtTime(ctx, player.currentTime, 1);
+            updateUIControls();
+            if (player.isPlaying) startLiveAudioFrom(player.currentTime);
+        }
+
+        function togglePlay() {
+            ensureAudioContext();
+            if (player.isPlaying) {
+                player.isPlaying = false;
+                stopLiveAudio();
+            } else {
+                if (player.currentTime >= syncState.totalDuration - 0.05) player.currentTime = 0;
+                player.isPlaying = true;
+                player.lastFramePerf = performance.now();
+                startLiveAudioFrom(player.currentTime);
+                document.getElementById("btnStepPreview").classList.add("active");
+            }
+            updateUIControls();
+        }
+
+        function animationLoop(now) {
+            if (player.isPlaying) {
+                const dt = (now - player.lastFramePerf) / 1000;
+                player.lastFramePerf = now;
+                player.currentTime += dt;
+                if (player.currentTime >= syncState.totalDuration) {
+                    player.currentTime = syncState.totalDuration;
+                    player.isPlaying = false;
+                    stopLiveAudio();
+                }
+                renderAtTime(ctx, player.currentTime, 1);
+                updateUIControls();
+            }
+            requestAnimationFrame(animationLoop);
+        }
+
+        document.getElementById("btnImportAudio").addEventListener("click", () => {
+            ensureAudioContext();
+            document.getElementById("audioFileInput").click();
+        });
+
+        document.getElementById("audioFileInput").addEventListener("change", async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            try {
+                ensureAudioContext();
+                const arrBuf = await file.arrayBuffer();
+                const decoded = await player.audioCtx.decodeAudioData(arrBuf);
+                syncState.isAudioLoaded = true;
+                syncState.audioBuffer = decoded;
+                syncState.audioDuration = decoded.duration;
+                analyzeAudioRMS(decoded);
+                buildSyncTimeline(player.nudges);
+                renderSyncDrawerAndPills();
+
+                const strip = document.getElementById("syncStatusStrip");
+                strip.classList.add("synced");
+                document.getElementById("syncStatusText").textContent =
+                    `ซิงก์เสียงจริงแล้ว (${decoded.duration.toFixed(2)}s • พบจุดเว้นวรรค ${syncState.pauses.length} จุด)`;
+
+                seekTo(0);
+            } catch (err) {
+                alert("ไม่สามารถอ่านไฟล์เสียงได้: " + err.message);
+            }
+        });
+
+        document.getElementById("btnToggleSyncDrawer").addEventListener("click", () => {
+            document.getElementById("syncDrawer").classList.toggle("open");
+        });
+
+        document.getElementById("btnResetSync").addEventListener("click", () => {
+            player.nudges = {};
+            buildSyncTimeline({});
+            renderSyncDrawerAndPills();
+            seekTo(player.currentTime);
+        });
+
+        document.getElementById("btnPlayPause").addEventListener("click", togglePlay);
+        document.getElementById("btnStepPreview").addEventListener("click", togglePlay);
+
+        document.getElementById("btnMute").addEventListener("click", () => {
+            player.isMuted = !player.isMuted;
+            if (player.masterGain) player.masterGain.gain.value = player.isMuted ? 0 : 1;
+            updateUIControls();
+        });
+
+        document.getElementById("btnFullscreen").addEventListener("click", () => {
+            const el = document.getElementById("canvasFrame");
+            if (!document.fullscreenElement) {
+                if (el.requestFullscreen) el.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+
+        document.getElementById("timelineSlider").addEventListener("input", (e) => {
+            seekTo(parseFloat(e.target.value));
+        });
+
+        /* ============================================================================
+           10. REAL VIDEO EXPORT (METHOD A: WEBCODECS + MEDIABUNNY / METHOD B: MEDIARECORDER)
+           ============================================================================ */
+        const isMobileDevice = ("ontouchstart" in window) || window.innerWidth <= 820;
+        const chkHighRes = document.getElementById("chkHighRes");
+        chkHighRes.checked = !isMobileDevice;
+        document.getElementById("resHintText").textContent = isMobileDevice
+            ? "ค่าเริ่มต้นมือถือ: 720×1280 (ประหยัดแรมและเร็วกว่า)"
+            : "ค่าเริ่มต้นเดสก์ท็อป: 1080×1920 (Full HD)";
+
+        let exportCancelled = false;
+        let exportedBlobUrl = null;
+        let exportedFileObj = null;
+
+        function openExportModal() {
+            if (player.isPlaying) togglePlay();
+            document.getElementById("exportErrorBox").style.display = "none";
+            document.getElementById("exportResultWrap").style.display = "none";
+            document.getElementById("exportProgressBox").style.display = "none";
+            document.getElementById("exportStartActions").style.display = "flex";
+            document.getElementById("btnStartExport").style.display = "inline-flex";
+            document.getElementById("btnCancelExport").style.display = "none";
+            document.getElementById("exportModal").classList.add("open");
+        }
+
+        document.getElementById("btnOpenExport").addEventListener("click", openExportModal);
+        document.getElementById("btnStepExport").addEventListener("click", openExportModal);
+        document.getElementById("btnCloseExportModal").addEventListener("click", () => {
+            exportCancelled = true;
+            document.getElementById("exportModal").classList.remove("open");
+        });
+
+        document.getElementById("btnCancelExport").addEventListener("click", () => {
+            exportCancelled = true;
+        });
+
+        async function renderOfflineAudioBuffer(durationSec, sampleRate = 48000) {
+            const length = Math.ceil(durationSec * sampleRate);
+            const offline = new OfflineAudioContext(2, length, sampleRate);
+            scheduleFullAudioMix(offline, offline.destination, 0, durationSec);
+            return await offline.startRendering();
+        }
+
+        async function tryMethodAWebCodecs(outW, outH, fps, durationSec, onProgress) {
+            if (typeof VideoEncoder === "undefined" || typeof AudioEncoder === "undefined") {
+                throw new Error("เบราว์เซอร์ไม่รองรับ WebCodecs");
+            }
+
+            const codecCandidates = ["avc1.640028", "avc1.4d0028", "avc1.42E01F"];
+            let chosenVideoCodec = null;
+            for (const c of codecCandidates) {
+                const sup = await VideoEncoder.isConfigSupported({
+                    codec: c,
+                    width: outW,
+                    height: outH,
+                    bitrate: outW >= 1080 ? 5_000_000 : 2_800_000,
+                    framerate: fps
+                });
+                if (sup.supported) {
+                    chosenVideoCodec = c;
+                    break;
+                }
+            }
+            if (!chosenVideoCodec) throw new Error("ไม่รองรับ H.264 VideoEncoder ที่ความละเอียดนี้");
+
+            const audioSup = await AudioEncoder.isConfigSupported({
+                codec: "mp4a.40.2",
+                sampleRate: 48000,
+                numberOfChannels: 2,
+                bitrate: 128000
+            });
+            if (!audioSup.supported) throw new Error("ไม่รองรับ AAC AudioEncoder");
+
+            const mb = await import("https://cdn.jsdelivr.net/npm/mediabunny@1.14.1/+esm");
+            const { Output, Mp4OutputFormat, BufferTarget, EncodedVideoPacketSource, EncodedAudioPacketSource, EncodedPacket } = mb;
+
+            const target = new BufferTarget();
+            const output = new Output({
+                format: new Mp4OutputFormat(),
+                target
+            });
+
+            const videoSource = new EncodedVideoPacketSource("avc");
+            const audioSource = new EncodedAudioPacketSource("aac");
+            output.addVideoTrack(videoSource, { frameRate: fps });
+            output.addAudioTrack(audioSource);
+            await output.start();
+
+            const audioBuf = await renderOfflineAudioBuffer(durationSec, 48000);
+
+            const audioEncoder = new AudioEncoder({
+                output: (chunk, meta) => {
+                    audioSource.add(EncodedPacket.fromEncodedChunk(chunk), meta);
+                },
+                error: (e) => { throw e; }
+            });
+            audioEncoder.configure({
+                codec: "mp4a.40.2",
+                sampleRate: 48000,
+                numberOfChannels: 2,
+                bitrate: 128000
+            });
+
+            const chunkSamples = 4800;
+            const ch0 = audioBuf.getChannelData(0);
+            const ch1 = audioBuf.getChannelData(1);
+            for (let offset = 0; offset < audioBuf.length; offset += chunkSamples) {
+                const count = Math.min(chunkSamples, audioBuf.length - offset);
+                const planar = new Float32Array(count * 2);
+                planar.set(ch0.subarray(offset, offset + count), 0);
+                planar.set(ch1.subarray(offset, offset + count), count);
+                const ad = new AudioData({
+                    format: "f32-planar",
+                    sampleRate: 48000,
+                    numberOfFrames: count,
+                    numberOfChannels: 2,
+                    timestamp: Math.round((offset / 48000) * 1_000_000),
+                    data: planar
+                });
+                audioEncoder.encode(ad);
+                ad.close();
+            }
+            await audioEncoder.flush();
+            audioEncoder.close();
+
+            const offCanvas = document.createElement("canvas");
+            offCanvas.width = outW;
+            offCanvas.height = outH;
+            const offCtx = offCanvas.getContext("2d");
+            const scaleFactor = outW / W;
+
+            const videoEncoder = new VideoEncoder({
+                output: (chunk, meta) => {
+                    videoSource.add(EncodedPacket.fromEncodedChunk(chunk), meta);
+                },
+                error: (e) => { throw e; }
+            });
+            videoEncoder.configure({
+                codec: chosenVideoCodec,
+                width: outW,
+                height: outH,
+                bitrate: outW >= 1080 ? 5_000_000 : 2_800_000,
+                framerate: fps
+            });
+
+            const totalFrames = Math.ceil(durationSec * fps);
+            for (let i = 0; i < totalFrames; i++) {
+                if (exportCancelled) {
+                    videoEncoder.close();
+                    throw new Error("ยกเลิกการสร้างวิดีโอแล้ว");
+                }
+                const t = i / fps;
+                renderAtTime(offCtx, t, scaleFactor);
+                const frame = new VideoFrame(offCanvas, {
+                    timestamp: Math.round((i / fps) * 1_000_000),
+                    duration: Math.round((1 / fps) * 1_000_000)
+                });
+                videoEncoder.encode(frame, { keyFrame: i % (fps * 2) === 0 });
+                frame.close();
+
+                if (videoEncoder.encodeQueueSize > 8 || i % 6 === 0) {
+                    onProgress(i + 1, totalFrames);
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            await videoEncoder.flush();
+            videoEncoder.close();
+            await output.finalize();
+
+            return {
+                blob: new Blob([target.buffer], { type: "video/mp4" }),
+                ext: "mp4",
+                mime: "video/mp4"
+            };
+        }
+
+        async function runMethodBMediaRecorder(outW, outH, fps, durationSec, onProgress) {
+            if (typeof MediaRecorder === "undefined") {
+                throw new Error("เบราว์เซอร์นี้ไม่รองรับการบันทึกวิดีโอ (MediaRecorder)");
+            }
+
+            const mimePriority = [
+                "video/mp4;codecs=avc1,mp4a.40.2",
+                "video/mp4",
+                "video/webm;codecs=vp9,opus",
+                "video/webm;codecs=vp8,opus",
+                "video/webm"
+            ];
+            const chosenMime = mimePriority.find(m => MediaRecorder.isTypeSupported(m)) || "";
+            if (!chosenMime) {
+                throw new Error("ไม่พบรูปแบบไฟล์วิดีโอที่เบราว์เซอร์รองรับ");
+            }
+            const isMp4 = chosenMime.includes("mp4");
+            const ext = isMp4 ? "mp4" : "webm";
+
+            const offCanvas = document.createElement("canvas");
+            offCanvas.width = outW;
+            offCanvas.height = outH;
+            const offCtx = offCanvas.getContext("2d");
+            const scaleFactor = outW / W;
+
+            const stream = offCanvas.captureStream(fps);
+            const AC = window.AudioContext || window.webkitAudioContext;
+            const recAudioCtx = new AC();
+            const dest = recAudioCtx.createMediaStreamDestination();
+            dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+
+            const recorder = new MediaRecorder(stream, {
+                mimeType: chosenMime,
+                videoBitsPerSecond: outW >= 1080 ? 4_500_000 : 2_500_000
+            });
+
+            const chunks = [];
+            recorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) chunks.push(e.data);
+            };
+
+            const donePromise = new Promise((resolve, reject) => {
+                recorder.onstop = () => resolve(new Blob(chunks, { type: chosenMime }));
+                recorder.onerror = (e) => reject(e.error || new Error("MediaRecorder error"));
+            });
+
+            const stopMix = scheduleFullAudioMix(recAudioCtx, dest, 0, durationSec);
+            recorder.start(250);
+
+            const totalFrames = Math.ceil(durationSec * fps);
+            const startPerf = performance.now();
+
+            await new Promise((resolve, reject) => {
+                function stepFrame() {
+                    if (exportCancelled) {
+                        stopMix();
+                        try { recorder.stop(); } catch (_) { }
+                        recAudioCtx.close();
+                        reject(new Error("ยกเลิกการสร้างวิดีโอแล้ว"));
+                        return;
+                    }
+                    const elapsed = (performance.now() - startPerf) / 1000;
+                    const curFrame = Math.min(totalFrames, Math.floor(elapsed * fps));
+                    renderAtTime(offCtx, Math.min(durationSec, elapsed), scaleFactor);
+                    onProgress(curFrame, totalFrames);
+
+                    if (elapsed >= durationSec) {
+                        stopMix();
+                        recorder.stop();
+                        recAudioCtx.close();
+                        resolve();
+                    } else {
+                        requestAnimationFrame(stepFrame);
+                    }
+                }
+                requestAnimationFrame(stepFrame);
+            });
+
+            const blob = await donePromise;
+            return { blob, ext, mime: chosenMime };
+        }
+
+        document.getElementById("btnStartExport").addEventListener("click", async () => {
+            exportCancelled = false;
+            const highRes = chkHighRes.checked;
+            const outW = highRes ? 1080 : 720;
+            const outH = highRes ? 1920 : 1280;
+            const fps = 30;
+            const durationSec = syncState.totalDuration;
+
+            const errBox = document.getElementById("exportErrorBox");
+            const progBox = document.getElementById("exportProgressBox");
+            const resWrap = document.getElementById("exportResultWrap");
+            const infoBox = document.getElementById("exportMethodInfo");
+
+            errBox.style.display = "none";
+            resWrap.style.display = "none";
+            progBox.style.display = "flex";
+            document.getElementById("btnStartExport").style.display = "none";
+            document.getElementById("btnCancelExport").style.display = "inline-flex";
+
+            let wakeLock = null;
+            try {
+                if ("wakeLock" in navigator) {
+                    wakeLock = await navigator.wakeLock.request("screen");
+                }
+            } catch (_) { }
+
+            const tStart = performance.now();
+            const updateProgress = (done, total) => {
+                const pct = Math.min(100, Math.round((done / Math.max(1, total)) * 100));
+                const sec = ((performance.now() - tStart) / 1000).toFixed(1);
+                document.getElementById("exportProgressFill").style.width = `${pct}%`;
+                document.getElementById("exportProgressPct").textContent = `${pct}%`;
+                document.getElementById("exportProgressFrames").textContent = `${done} / ${total} เฟรม`;
+                document.getElementById("exportProgressElapsed").textContent = `${sec}s`;
+            };
+
+            try {
+                let result;
+                try {
+                    infoBox.textContent = `กำลังใช้วิธี A: WebCodecs H.264/AAC MP4 (${outW}×${outH}) เร็วกว่าเรียลไทม์...`;
+                    result = await tryMethodAWebCodecs(outW, outH, fps, durationSec, updateProgress);
+                } catch (webCodecsErr) {
+                    if (exportCancelled) throw webCodecsErr;
+                    infoBox.textContent = `กำลังใช้วิธี B: MediaRecorder เรียลไทม์ (${outW}×${outH}) — กรุณาเปิดหน้านี้ค้างไว้ ~${Math.ceil(durationSec)} วินาที`;
+                    result = await runMethodBMediaRecorder(outW, outH, fps, durationSec, updateProgress);
+                }
+
+                if (exportedBlobUrl) URL.revokeObjectURL(exportedBlobUrl);
+                exportedBlobUrl = URL.createObjectURL(result.blob);
+                const fileName = `dorm_5_rules_${outW}x${outH}.${result.ext}`;
+                exportedFileObj = new File([result.blob], fileName, { type: result.mime });
+
+                const videoEl = document.getElementById("exportedVideoPlayer");
+                videoEl.src = exportedBlobUrl;
+                const dlLink = document.getElementById("btnDownloadVideo");
+                dlLink.href = exportedBlobUrl;
+                dlLink.download = fileName;
+
+                infoBox.textContent = `สร้างไฟล์สำเร็จ (${fileName} • ${(result.blob.size / (1024 * 1024)).toFixed(2)} MB)`;
+                resWrap.style.display = "flex";
+                document.getElementById("exportStartActions").style.display = "none";
+            } catch (err) {
+                errBox.textContent = err.message || "เกิดข้อผิดพลาดในการสร้างวิดีโอ";
+                errBox.style.display = "block";
+                document.getElementById("btnStartExport").style.display = "inline-flex";
+                document.getElementById("btnCancelExport").style.display = "none";
+            } finally {
+                if (wakeLock) {
+                    try { await wakeLock.release(); } catch (_) { }
+                }
+            }
+        });
+
+        document.getElementById("btnShareVideo").addEventListener("click", async () => {
+            if (!exportedFileObj) return;
+            try {
+                if (navigator.canShare && navigator.canShare({ files: [exportedFileObj] })) {
+                    await navigator.share({
+                        files: [exportedFileObj],
+                        title: G1.project
+                    });
+                } else {
+                    document.getElementById("btnDownloadVideo").click();
+                }
+            } catch (_) { }
+        });
+
+        /* ============================================================================
+           11. INITIALIZE AFTER FONTS READY
+           ============================================================================ */
+        async function initApp() {
+            if (document.fonts && document.fonts.ready) {
+                try { await document.fonts.ready; } catch (_) { }
+            }
+            buildSyncTimeline({});
+            renderSyncDrawerAndPills();
+            renderAtTime(ctx, 0, 1);
+            updateUIControls();
+            requestAnimationFrame(animationLoop);
+        }
+
+        initApp();
+    </script>
 </body>
+
 </html>
